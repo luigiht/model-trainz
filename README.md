@@ -1,7 +1,8 @@
 # Rail Baron Clicker
 
-A cozy 3D train clicker: shovel coal, build steam, and grow a rail empire across a voxel diorama
-rendered with soft shadows, ambient occlusion and bloom. Runs entirely in the browser.
+A cozy 3D railway clicker: click to lay track in front of your little steam train, watch it chuff
+to the next station, collect fares and upgrade your way to an automatic track gang. Low-poly world
+with soft shadows and bloom. Runs entirely in the browser.
 
 > Work in progress. See `docs/PLAN.md` for milestone status.
 
@@ -22,11 +23,15 @@ pnpm dev          # http://localhost:3000
 | `pnpm test:e2e`  | Playwright smoke tests + screenshots |
 | `pnpm format`    | Prettier                             |
 
-## Controls (so far)
+## How to play
 
-- Drag to orbit, scroll to zoom.
-- `` ` `` toggles the debug overlay (FPS, draw calls, triangles…).
-- Quality picker (top right): Auto / Low / Medium / High / Ultra.
+- **Click the scene** (or press/hold **Space**, or the **Lay track** button) to lay track in front of
+  the train. Hold to keep laying (capped at 12 pieces of effort per second).
+- When the track reaches the next station, the train departs and earns fares on arrival.
+- Spend coins in the **Upgrades** panel: bigger shovels, steel rails, a track gang that lays track
+  automatically (even while you're away), a hotter boiler, fare hikes, extra carriages, golden spikes.
+- Scroll to zoom. `` ` `` toggles the debug overlay. Quality picker, sound toggle and reset are top right.
+- Progress autosaves to your browser.
 
 ## Docs
 

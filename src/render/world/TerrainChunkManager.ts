@@ -1,36 +1,29 @@
-import { Group, Mesh } from "three";
-import { RENDER_CLASSES } from "./blocks";
-import { CHUNK_SIZE } from "./constants";
-import { meshArraysToGeometry } from "./geometry";
-import type { VoxelMaterials } from "@/render/materials/voxelMaterial";
+import { BufferAttribute, BufferGeometry, Group, Mesh, type Material } from "three";
 import { ChunkWorkerPool } from "@/render/workers/ChunkWorkerPool";
 import type { ChunkResponse } from "@/render/workers/chunkProtocol";
-
-interface LoadedChunk {
-  meshes: Mesh[];
-}
+import { CHUNK_SIZE } from "./terrain";
 
 const key = (cx: number, cz: number) => `${cx},${cz}`;
 
 /**
- * Streams terrain chunks around a focus point: requests missing chunks from the worker pool
- * (nearest first), uploads at most `uploadsPerFrame` finished chunks per frame, and disposes chunks
- * that leave the radius. Owns its meshes/geometries; materials are shared and owned by the caller.
+ * Streams low-poly terrain chunks around a focus point: requests missing chunks from the worker
+ * pool (nearest first), uploads at most `uploadsPerFrame` per frame, disposes chunks that leave the
+ * radius. Owns geometries; the shared material is owned by the caller.
  */
-export class ChunkManager {
+export class TerrainChunkManager {
   readonly group = new Group();
-  private loaded = new Map<string, LoadedChunk>();
+  private loaded = new Map<string, Mesh>();
   private requested = new Set<string>();
   private ready: ChunkResponse[] = [];
   private pool = new ChunkWorkerPool();
+  private wanted = new Set<string>();
   private nextId = 1;
   private centerKey = "";
-  private wanted = new Set<string>();
-  shadows = true;
+  private shadows = true;
 
   constructor(
     private readonly seed: number,
-    private readonly materials: VoxelMaterials,
+    private readonly material: Material,
     public radius = 4,
     private readonly uploadsPerFrame = 2,
   ) {
@@ -41,11 +34,11 @@ export class ChunkManager {
     return this.loaded.size;
   }
 
-  get isIdle(): boolean {
-    return this.pool.pending === 0 && this.ready.length === 0 && this.loaded.size > 0;
+  /** True once the first ring of chunks around the focus is on screen. */
+  get hasInitialChunks(): boolean {
+    return this.loaded.size >= Math.min(9, this.wanted.size);
   }
 
-  /** Call every frame with the world-space focus position. Cheap when nothing changed. */
   update(x: number, z: number) {
     const ccx = Math.floor(x / CHUNK_SIZE);
     const ccz = Math.floor(z / CHUNK_SIZE);
@@ -65,16 +58,16 @@ export class ChunkManager {
     for (let dz = -r; dz <= r; dz++)
       for (let dx = -r; dx <= r; dx++) {
         const d2 = dx * dx + dz * dz;
-        if (d2 > r * r + r) continue; // round footprint
+        if (d2 > r * r + r) continue;
         order.push([ccx + dx, ccz + dz, d2]);
         this.wanted.add(key(ccx + dx, ccz + dz));
       }
     order.sort((a, b) => a[2] - b[2]);
 
-    // Unload chunks out of range (with one chunk of hysteresis to avoid thrashing at borders).
-    for (const [k, chunk] of this.loaded) {
+    // Unload with one chunk of hysteresis so we don't thrash at borders.
+    for (const [k, mesh] of this.loaded) {
       const [cx, cz] = k.split(",").map(Number);
-      if ((cx - ccx) ** 2 + (cz - ccz) ** 2 > (r + 1) ** 2 + r + 1) this.unload(k, chunk);
+      if ((cx - ccx) ** 2 + (cz - ccz) ** 2 > (r + 1) ** 2 + r + 1) this.unload(k, mesh);
     }
     this.pool.cancelQueued((req) => this.wanted.has(key(req.cx, req.cz)));
     this.ready = this.ready.filter((res) => {
@@ -94,7 +87,7 @@ export class ChunkManager {
         .catch((e: unknown) => {
           this.requested.delete(k);
           if (!(e instanceof DOMException && e.name === "AbortError"))
-            console.error("chunk failed", e);
+            console.error("terrain chunk failed", e);
         });
     }
   }
@@ -103,41 +96,36 @@ export class ChunkManager {
     const k = key(res.cx, res.cz);
     this.requested.delete(k);
     if (!this.wanted.has(k) || this.loaded.has(k)) return;
-    const meshes: Mesh[] = [];
-    for (const cls of RENDER_CLASSES) {
-      const geometry = meshArraysToGeometry(res.meshes[cls]);
-      if (!geometry) continue;
-      const mesh = new Mesh(geometry, this.materials[cls]);
-      mesh.castShadow = this.shadows && cls !== "transparent";
-      mesh.receiveShadow = this.shadows;
-      mesh.matrixAutoUpdate = false;
-      if (cls === "transparent") mesh.renderOrder = 1;
-      meshes.push(mesh);
-      this.group.add(mesh);
-    }
-    this.loaded.set(k, { meshes });
+    const g = new BufferGeometry();
+    g.setAttribute("position", new BufferAttribute(res.data.positions, 3));
+    g.setAttribute("normal", new BufferAttribute(res.data.normals, 3));
+    g.setAttribute("color", new BufferAttribute(res.data.colors, 3));
+    g.computeBoundingSphere();
+    const mesh = new Mesh(g, this.material);
+    mesh.castShadow = this.shadows;
+    mesh.receiveShadow = this.shadows;
+    mesh.matrixAutoUpdate = false;
+    this.group.add(mesh);
+    this.loaded.set(k, mesh);
   }
 
-  private unload(k: string, chunk: LoadedChunk) {
-    for (const m of chunk.meshes) {
-      this.group.remove(m);
-      m.geometry.dispose();
-    }
+  private unload(k: string, mesh: Mesh) {
+    this.group.remove(mesh);
+    mesh.geometry.dispose();
     this.loaded.delete(k);
   }
 
   setShadows(enabled: boolean) {
     this.shadows = enabled;
-    for (const { meshes } of this.loaded.values())
-      for (const m of meshes) {
-        m.castShadow = enabled && m.material !== this.materials.transparent;
-        m.receiveShadow = enabled;
-      }
+    for (const m of this.loaded.values()) {
+      m.castShadow = enabled;
+      m.receiveShadow = enabled;
+    }
   }
 
   dispose() {
     this.pool.terminate();
-    for (const [k, chunk] of this.loaded) this.unload(k, chunk);
+    for (const [k, m] of this.loaded) this.unload(k, m);
     this.ready = [];
     this.requested.clear();
   }

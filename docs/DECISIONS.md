@@ -54,3 +54,39 @@ Newest at the bottom. Each entry: decision — why.
 - **`/dev/models`** is available in `pnpm dev`; in production builds it 404s unless
   `NEXT_PUBLIC_DEV_ROUTES=1`.
 - No foliage sway or water shader yet (M5); leaves cast solid shadow-map shadows for now.
+
+## Pivot: track-laying loop + low-poly look (after M1)
+
+- **User request:** "Make it playable, the user clicks in the station and a piece of track is placed in
+  front of them, make it less boxy like minecraft and more low-poly."
+- **Core loop interpretation:** the train sits at a station; each click lays one piece (piecesPerClick
+  with upgrades) at the railhead in front of it. Leg lengths grow (10 + 3k pieces, capped at 40).
+  When the railhead reaches the next station the train departs automatically, brakes into the next
+  platform, and earns a fare. Laying is allowed while traveling (pre-building the next leg).
+- **Click target:** clicking anywhere on the 3D scene lays track (the active station is marked with a
+  bouncing marker and the next piece's spot with a pulsing ghost). Restricting clicks to the station
+  mesh alone was rejected: the station scrolls away while the camera follows the train, which would
+  make the core action hard to hit. A big "Lay track (Space)" button and Space-hold provide
+  keyboard/touch-friendly alternatives. Effective rate capped at 12 clicks/s.
+- **Voxel engine removed** (block registry, atlas, greedy mesher, voxel material, model viewer) rather
+  than kept as dead code; it remains in git history (commit 5f2be99). Kept: seeded noise, worker pool,
+  chunk streaming, quality tiers, post stack.
+- **Low-poly terrain:** 2-unit jittered grid (jitter keyed on the global vertex index so chunk edges
+  match), alternating diagonals, flat-shaded per-face colours by height/slope; trees, bushes and
+  rocks are _baked into each chunk's triangle soup in the worker_ → one draw call per 32×32 chunk.
+- **Route:** an analytic curve z(x), y(x) (sum of sines, seeded) re-parameterised by arc length; the
+  terrain is flattened within 3.5 units of it and blends back to natural by 15 units. Analytic means
+  workers can flatten terrain without knowing which track has been laid.
+- **Track rendering:** instanced ballast / sleepers / rails for a window of ~220 pieces around the
+  train; matrices are rewritten only when the window or laid count changes (or during the drop-in
+  animation of new pieces).
+- **Train & stations** are built from three.js primitives with `flatShading`; carriages articulate by
+  sampling two bogie points on the route.
+- **Plain `number` for currency** for now (fine to ~1e308); break_infinity.js deferred until the
+  economy needs it.
+- **Saves:** localStorage, versioned envelope with FNV checksum, backup slot, defensive merge for
+  missing fields; autosave every 10 s, on purchase, and on `visibilitychange`/`pagehide`. Long gaps
+  (tab hidden / offline, capped at 8 h) run through a coarse 1 s-step catch-up; a Welcome Back dialog
+  appears after ≥ 60 s away.
+- **Audio:** tiny procedural Web Audio SFX (clank, coin, whistle, arrival, purchase, golden), lazily
+  created on first gesture, mute persisted in settings.

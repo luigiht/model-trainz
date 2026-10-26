@@ -1,5 +1,15 @@
 # Implementation plan
 
+> **Re-planned after M1** at the user's request: a playable track-laying loop now, in a low-poly
+> style (see `docs/DECISIONS.md`, "Pivot"). M2/M3 were folded into the "Playable slice" below; later
+> milestones keep their goals but apply to the low-poly world.
+
+| Slice                 | Delivered                                                                                                                                                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Playable slice (done) | Low-poly streamed terrain with baked trees, analytic route, click/hold/Space to lay track with drop-in animation, train departs/arrives with fares, 7 upgrades, stations, steam, water, follow camera, HUD + shop, saves + offline catch-up, procedural SFX, tests |
+
+Original milestone table (status updated):
+
 Vertical slices; every milestone ends green on `pnpm typecheck && pnpm lint && pnpm test && pnpm build`,
 a Playwright screenshot check, and a commit.
 

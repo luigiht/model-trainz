@@ -1,4 +1,10 @@
-# Rail Baron Clicker — design brief (condensed, authoritative)
+# Rail Baron Clicker — design brief (condensed)
+
+> **User direction after M1 (overrides the brief where they conflict):** make it playable now, with a
+> core loop where _the player clicks at the station and a piece of track is placed in front of the
+> train_, and make the look **less boxy / more low-poly** instead of Minecraft-style voxels. Voxel
+> references below (§3.1–3.2, §10 "Voxel") are superseded by the low-poly style; the rest of the
+> brief remains the long-term target.
 
 Condensed from the original project prompt. Section numbers are referenced elsewhere (e.g. "§3.2").
 

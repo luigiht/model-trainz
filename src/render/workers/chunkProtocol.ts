@@ -1,4 +1,4 @@
-import type { ChunkMeshes } from "@/render/voxel/ChunkMesher";
+import type { TerrainChunkData } from "@/render/world/terrain";
 
 export interface ChunkRequest {
   id: number;
@@ -11,7 +11,7 @@ export interface ChunkResponse {
   id: number;
   cx: number;
   cz: number;
-  meshes: ChunkMeshes;
-  /** Generation + meshing time inside the worker (ms). */
+  data: TerrainChunkData;
+  /** Build time inside the worker (ms). */
   ms: number;
 }

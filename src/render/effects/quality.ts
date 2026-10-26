@@ -20,8 +20,6 @@ export interface QualityTier {
   /** Tilt-shift DOF, applied in the isometric camera only. */
   tiltShift: boolean;
   godRays: boolean;
-  /** Voxel edge highlight strength (0 = off). */
-  bevel: number;
 }
 
 export const QUALITY_TIERS: Record<QualityLevel, QualityTier> = {
@@ -35,7 +33,6 @@ export const QUALITY_TIERS: Record<QualityLevel, QualityTier> = {
     vignette: false,
     tiltShift: false,
     godRays: false,
-    bevel: 0,
   },
   medium: {
     maxDpr: 1.25,
@@ -47,7 +44,6 @@ export const QUALITY_TIERS: Record<QualityLevel, QualityTier> = {
     vignette: false,
     tiltShift: false,
     godRays: false,
-    bevel: 0,
   },
   high: {
     maxDpr: 1.5,
@@ -59,7 +55,6 @@ export const QUALITY_TIERS: Record<QualityLevel, QualityTier> = {
     vignette: true,
     tiltShift: true,
     godRays: false,
-    bevel: 0.07,
   },
   ultra: {
     maxDpr: 1.75,
@@ -71,7 +66,6 @@ export const QUALITY_TIERS: Record<QualityLevel, QualityTier> = {
     vignette: true,
     tiltShift: true,
     godRays: true,
-    bevel: 0.07,
   },
 };
 

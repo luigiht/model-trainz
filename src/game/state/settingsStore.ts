@@ -10,6 +10,8 @@ export interface SettingsState {
   ssao: boolean;
   bloom: boolean;
   tiltShift: boolean;
+  muted: boolean;
+  setMuted: (muted: boolean) => void;
   setQuality: (quality: QualitySetting) => void;
   setResolutionScale: (scale: number) => void;
   setEffect: (effect: "shadows" | "ssao" | "bloom" | "tiltShift", enabled: boolean) => void;
@@ -26,6 +28,8 @@ export const useSettingsStore = create<SettingsState>()(
       ssao: true,
       bloom: true,
       tiltShift: true,
+      muted: false,
+      setMuted: (muted) => set({ muted }),
       setQuality: (quality) => set({ quality }),
       setResolutionScale: (resolutionScale) =>
         set({ resolutionScale: Math.min(1, Math.max(0.5, resolutionScale)) }),

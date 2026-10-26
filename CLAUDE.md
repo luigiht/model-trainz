@@ -2,13 +2,14 @@
 
 # Rail Baron Clicker
 
-A cozy 3D incremental/clicker game. The player drives a train through a procedurally generated voxel
-diorama: click/hold/Space to build steam pressure, move the train, earn coins, and spend them on
-upgrades, locomotives, carriages, routes and automation, eventually prestiging ("Retire & Rebuild")
-for Golden Rails. The look is "voxel meets realistic lighting": greedy-meshed voxel chunks with baked
-vertex AO, a procedural pixel-art atlas, PBR-ish materials, shadows and a quality-tiered
-post-processing stack. Two camera modes: first-person Cab view and an isometric diorama view.
-Fully client-side Next.js app; no backend, no external assets.
+A cozy 3D incremental/clicker game about building a railway. The train waits at a station; each
+click (or Space / hold) lays a piece of track in front of it. When the track reaches the next
+station the train departs, earns fares on arrival, and the player lays the next stretch. Coins buy
+upgrades (pieces per click, an automatic track gang, speed, fares, carriages, golden spikes).
+The look is **flat-shaded low-poly** (faceted terrain, cone/blob trees, primitive-built train and
+stations) with soft shadows, bloom and a quality-tiered post stack — the original voxel style was
+dropped at the user's request (see `docs/DECISIONS.md`, "Pivot"). Fully client-side Next.js app; no
+backend, no external assets.
 
 The full design brief lives in `docs/BRIEF.md`; the milestone plan in `docs/PLAN.md`; decisions in
 `docs/DECISIONS.md`; architecture in `docs/ARCHITECTURE.md`.
@@ -33,11 +34,10 @@ The full design brief lives in `docs/BRIEF.md`; the milestone plan in `docs/PLAN
 - `pnpm dev` — dev server (http://localhost:3000)
 - `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm build`
 - `pnpm test:e2e` — Playwright smoke tests (starts its own server) and screenshots to `test-results/`
-- `pnpm sim` — economy balance simulator (from M3)
 
 ## Layout
 
 - `src/game/**` and `src/lib/**` — pure TS (no three/React imports in `simulation`, `economy`, `lib`).
-- `src/render/**` — three.js code (voxel engine, materials, effects, train models).
+- `src/render/**` — three.js code (terrain chunks + workers, train/station models, effects).
 - `src/components/**` — React/R3F components (`game/` canvas + scene, `hud/` UI).
 - `tests/unit` (Vitest), `tests/e2e` (Playwright).

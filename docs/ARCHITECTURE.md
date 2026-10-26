@@ -1,44 +1,36 @@
 # Architecture
 
 ```
-src/app/                 Next.js shell (server components): layout, page → <GameRoot/>
-src/components/game/     Client: GameRoot (dynamic ssr:false import), GameCanvas, scene parts, RenderProbe
-src/components/hud/      DOM HUD: LoadingScreen, DebugOverlay (`), QualityMenu
-src/game/state/          Zustand stores (settings: persisted; render runtime: not persisted)
-src/render/effects/      Quality tiers (pure), QualityGovernor (pure)
-src/render/debugStats.ts Mutable per-frame stats shared between canvas and overlay
-src/render/voxel/        blocks (registry), textures (procedural tiles + normals), atlasTexture
-                         (texture arrays), VoxelVolume (padded grid), ChunkMesher (greedy + AO),
-                         geometry, VoxelModel (layer-string format), ChunkManager (streaming)
-src/render/materials/    voxelMaterial (MeshStandardMaterial + onBeforeCompile)
-src/render/world/        terrain (seeded generator), propModels
-src/render/workers/      chunk.worker, ChunkWorkerPool, buildChunk (shared with sync fallback)
-src/app/dev/models       Dev-only model viewer
-src/lib/                 Pure utilities: seeded RNG + hashing
-tests/unit, tests/e2e    Vitest, Playwright (SwiftShader WebGL)
+src/app/                    Next.js shell (server components): layout, page → <GameRoot/>
+src/components/game/        GameRoot (input + event wiring), GameCanvas (scene), GameDriver (sim tick),
+                            Terrain, Water, Track, Stations, Train, Steam, CameraRig, RenderProbe,
+                            PostEffects, trainFx (mutable fx state)
+src/components/hud/         StatusPanel, UpgradeShop, Toasts, WelcomeBack, SettingsMenu, QualityMenu,
+                            DebugOverlay, LoadingScreen, floaters (imperative DOM pool)
+src/game/content/           upgrades, station names
+src/game/economy/           cost curves + derived stats (pure)
+src/game/simulation/        GameState, rules (legs/stations/fares), route (arc-length curve), step (pure)
+src/game/save/              versioned save envelope, checksum, backup
+src/game/state/             game.ts (runtime owner of the sim + HUD snapshot store), settingsStore
+src/render/world/           terrain (low-poly chunk builder), TerrainChunkManager, stationModel
+src/render/train/           trainModels (loco + carriages from primitives)
+src/render/workers/         chunk.worker, ChunkWorkerPool, buildChunk (shared with fallback)
+src/render/effects/         quality tiers, QualityGovernor
+src/audio/sfx.ts            procedural sound effects
 ```
 
 ## Data flow
 
-- Settings → `useActiveQualityLevel()` + toggles → `resolveEffects()` → `GameCanvas` mounts the
-  matching shadow config and `PostEffects` passes.
-- `RenderProbe` (inside the canvas) → `debugStats` (mutable) → `DebugOverlay` (setInterval, DOM
-  textContent). It also feeds frame times to `QualityGovernor`, which writes `autoLevel` to the
-  runtime store when the effective level should change.
-
-## Voxel pipeline
-
 ```
-TerrainGenerator.generateChunk(cx,cz) ─► VoxelVolume (18×66×18, padded)
-                                           │  (worker)
-                                           ▼
-                                 meshVolume() ─► {opaque, cutout, transparent} MeshArrays
-                                           │  postMessage + transferables
-                                           ▼
-ChunkManager.upload() ─► BufferGeometry + shared voxel materials ─► scene
+input (click / Space / button) ─► playerLayTrack() ─► clickLayTrack(state)      (pure)
+R3F frame ─► GameDriver ─► tickGame(dt) ─► stepSim(state, 1/30) × n             (pure, fixed step)
+                                   │
+                                   ├─► events (laid / depart / arrive) ─► sfx, toasts, floaters, recentLays
+                                   └─► useHud snapshot (≤10 Hz) ─► React HUD
+scene components read game.state imperatively in useFrame (train position, track window, camera)
 ```
 
-Models use the same path: `parseVoxelModel(def)` → padded volume (air border) → `meshVolume` →
-`VoxelModelMesh` (scaled by `def.scale`).
-
-This document grows with each milestone.
+- The GameState is one mutable plain object (`game.state`), serialisable as-is for saves.
+- Terrain chunks: `TerrainChunkManager.update(focus)` → worker `buildTerrainChunk` (heightmap +
+  baked props, flattened along the analytic route) → transferable Float32Arrays → one Mesh per chunk.
+- Settings → `useActiveQualityLevel()` + toggles → `resolveEffects()` → shadows + `PostEffects`.
