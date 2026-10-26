@@ -6,7 +6,7 @@ a Playwright screenshot check, and a commit.
 | #   | Milestone                | Key deliverables                                                                                                                                                       | Status  |
 | --- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | M0  | Foundation               | Scaffold, tooling, CLAUDE.md, settings store + quality tiers, lit/shadowed/post-processed voxel scene, loading screen, debug overlay, e2e smoke                        | done    |
-| M1  | Voxel engine             | Block registry, procedural atlas, chunk storage, greedy mesher + AO, voxel material (jitter, PBR params, normal detail), seeded terrain, worker meshing, `/dev/models` | planned |
+| M1  | Voxel engine             | Block registry, procedural atlas, chunk storage, greedy mesher + AO, voxel material (jitter, PBR params, normal detail), seeded terrain, worker meshing, `/dev/models` | done    |
 | M2  | Track & train            | Track graph + spline path-follow, loop route, "Pebble" + 2 cars from layer strings, wheels, articulation, steam puffs, fixed-timestep `TrainPhysics`                   | planned |
 | M3  | Clicker core + HUD       | Click/hold/Space with CPS cap, pressure gauge, income loop, big numbers, floating numbers, 10 upgrades, shop, save/load, offline dialog, economy tests + simulator     | planned |
 | M4  | Cameras                  | Iso follow/free/rotate/zoom + dither-fade, interactive cab with gauges/levers, blended transitions, head bob, FOV kick, touch                                          | planned |

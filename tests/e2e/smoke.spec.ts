@@ -23,7 +23,7 @@ test("game loads and renders a non-blank WebGL canvas", async ({ page }) => {
     return seen.size;
   });
   expect(distinctColors).toBeGreaterThan(20);
-  await page.screenshot({ path: "test-results/screenshots/m0-scene.png" });
+  await page.screenshot({ path: "test-results/screenshots/scene.png" });
   expect(errors).toEqual([]);
 });
 
@@ -32,6 +32,8 @@ test("debug overlay toggles with backtick and quality setting persists", async (
   await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
   await page.keyboard.press("`");
   await expect(page.getByTestId("debug-overlay")).toContainText("draw calls");
+  // Terrain chunks were generated (in workers) and uploaded.
+  await expect(page.getByTestId("debug-overlay")).toContainText(/chunks\s+[1-9]/);
   await page.getByTestId("quality-select").selectOption("low");
   await page.reload();
   await expect(page.getByTestId("quality-select")).toHaveValue("low");
