@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { AUTO_START_LEVEL, type QualityLevel, type QualitySetting } from "@/render/effects/quality";
 
+export type CameraMode = "diorama" | "cab";
+
 export interface SettingsState {
   quality: QualitySetting;
   /** 0.5–1.0 multiplier on the tier's DPR. */
@@ -10,6 +12,8 @@ export interface SettingsState {
   ssao: boolean;
   bloom: boolean;
   tiltShift: boolean;
+  cameraMode: CameraMode;
+  setCameraMode: (mode: CameraMode) => void;
   muted: boolean;
   /** Master volume 0–1. */
   volume: number;
@@ -31,6 +35,8 @@ export const useSettingsStore = create<SettingsState>()(
       ssao: true,
       bloom: true,
       tiltShift: true,
+      cameraMode: "diorama",
+      setCameraMode: (cameraMode) => set({ cameraMode }),
       muted: false,
       volume: 0.8,
       setMuted: (muted) => set({ muted }),

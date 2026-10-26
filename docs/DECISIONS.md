@@ -90,3 +90,20 @@ Newest at the bottom. Each entry: decision — why.
   appears after ≥ 60 s away.
 - **Audio:** tiny procedural Web Audio SFX (clank, coin, whistle, arrival, purchase, golden), lazily
   created on first gesture, mute persisted in settings.
+
+## Settings panel + Cab view
+
+- **Settings** is a native modal `<dialog>` (focus trap, Esc, backdrop click) opened from a button
+  between Sound and Reset; it holds sound (toggle + volume), graphics quality (radio group), camera
+  view, and a controls reference. The standalone quality dropdown was removed.
+- **Cab view** (first person) reuses the one `CameraRig`: both poses are computed every frame and
+  blended (position lerp with an upward arc, quaternion slerp, FOV 30°→62°, near plane 1→0.08)
+  over 1.2 s; reduced motion cuts instantly and disables head bob. The mode persists in settings.
+- **Cab interior** is a separate low-poly group parented to the loco, drawn only while the cab
+  camera is (partly) active. The exterior cab box is single-sided, so it disappears from inside; the
+  loco's window panes became tinted transparent glass so the driver can see out. The boiler was
+  shortened so it no longer pokes through the cab's front wall.
+- **Drag to look — cab view only.** In the cab, a press is ambiguous: < 6 px of travel on release =
+  tap (lays one piece), holding still for 320 ms = continuous laying, moving past 6 px = camera drag
+  (lays nothing). Diorama view keeps lay-on-press. Look is "grab the world", clamped to ±109° yaw,
+  -40°/+29° pitch, eased. Keyboard equivalents: arrow keys look, C re-centres, V switches view.

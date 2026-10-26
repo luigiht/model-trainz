@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import { buildCabInterior } from "@/render/train/cabInterior";
+import { deriveStats } from "@/game/economy/economy";
 import { useFrame } from "@react-three/fiber";
 import { Group, Matrix4, Quaternion, Vector3 } from "three";
 import { game, useHud } from "@/game/state/game";
@@ -23,6 +25,8 @@ const up = new Vector3();
 const basis = new Matrix4();
 const WORLD_UP = new Vector3(0, 1, 0);
 const q = new Quaternion();
+let lastSpeed = 0;
+let lanternVel = 0;
 
 /** Places a vehicle between two bogie points sampled on the route (articulates on curves). */
 function placeVehicle(group: Group, centerS: number, halfBase: number, sway: number) {
@@ -46,7 +50,18 @@ export function Train() {
     [carriages],
   );
 
-  useEffect(() => () => loco.dispose(), [loco]);
+  const cab = useMemo(() => buildCabInterior(), []);
+
+  useEffect(() => {
+    loco.group.add(cab.group);
+    trainFx.loco = loco.group;
+    return () => {
+      loco.group.remove(cab.group);
+      trainFx.loco = null;
+      loco.dispose();
+      cab.dispose();
+    };
+  }, [loco, cab]);
   useEffect(() => () => cars.forEach((c) => c.dispose()), [cars]);
 
   useFrame(({ clock }, dt) => {
@@ -69,6 +84,26 @@ export function Train() {
       );
       s -= CARRIAGE_LENGTH + COUPLING_GAP;
     });
+
+    // Cab interior: only drawn when the cab camera is (partly) active.
+    cab.group.visible = trainFx.cabBlend > 0.01;
+    if (cab.group.visible) {
+      const maxSpeed = deriveStats(state.levels).maxSpeed;
+      trainFx.pressure = Math.max(0.15, trainFx.pressure - dt * 0.08);
+      const ease = 1 - Math.exp(-dt * 6);
+      cab.pressureNeedle.rotation.x +=
+        (-(trainFx.pressure * 4.2 - 2.1) - cab.pressureNeedle.rotation.x) * ease;
+      cab.speedNeedle.rotation.x +=
+        (-((speed / maxSpeed) * 4.2 - 2.1) - cab.speedNeedle.rotation.x) * ease;
+      cab.regulator.rotation.z = state.phase === "traveling" ? -0.7 : 0.15;
+      // Lantern swings against acceleration, with a little damping wobble.
+      const accel = (speed - lastSpeed) / Math.max(dt, 1e-3);
+      lanternVel += (-accel * 0.06 - cab.lantern.rotation.z * 18) * dt - lanternVel * dt * 2.5;
+      cab.lantern.rotation.z += lanternVel * dt * 10;
+      cab.fireMaterial.emissiveIntensity =
+        2 + Math.sin(t * 13) * 0.4 + Math.sin(t * 29) * 0.3 + trainFx.pressure;
+    }
+    lastSpeed = speed;
 
     // Wheels roll with distance travelled.
     const dist = state.stats.distance;

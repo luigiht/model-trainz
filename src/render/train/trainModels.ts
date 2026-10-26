@@ -73,6 +73,15 @@ class Builder {
     return this.add(new BoxGeometry(w, h, d), this.mat(color, opts), x, y, z);
   }
 
+  glass(): Material {
+    const m = flatMaterial(0x9fc3d6, { roughness: 0.05, metalness: 0.3 });
+    m.transparent = true;
+    m.opacity = 0.22;
+    m.depthWrite = false;
+    this.owned.push(m);
+    return m;
+  }
+
   /** Cylinder lying along x. */
   barrel(
     r: number,
@@ -135,7 +144,7 @@ export function buildLocomotive(): VehicleModel {
   b.wheelPair(0.32, 1.95, COLORS.wheelRed);
   b.wheelPair(0.32, -1.85, COLORS.wheelRed);
   // Boiler, smokebox, chimney, dome.
-  b.barrel(0.7, 2.9, COLORS.locoGreen, 0.55, 2.05, 0, 8, { roughness: 0.45, metalness: 0.15 });
+  b.barrel(0.7, 2.6, COLORS.locoGreen, 0.65, 2.05, 0, 8, { roughness: 0.45, metalness: 0.15 });
   b.barrel(0.74, 0.12, COLORS.brass, 0.0, 2.05, 0, 8, { roughness: 0.3, metalness: 1 });
   b.barrel(0.74, 0.12, COLORS.brass, 1.2, 2.05, 0, 8, { roughness: 0.3, metalness: 1 });
   b.barrel(0.74, 0.7, COLORS.locoBlack, 2.2, 2.05, 0, 8, { roughness: 0.5, metalness: 0.3 });
@@ -156,10 +165,12 @@ export function buildLocomotive(): VehicleModel {
   // Cab.
   b.box(1.7, 1.9, 1.85, COLORS.locoGreen, -1.55, 2.3, 0, { roughness: 0.45, metalness: 0.15 });
   b.box(2.0, 0.16, 2.05, COLORS.locoBlack, -1.6, 3.3, 0);
-  b.box(0.05, 0.6, 0.55, COLORS.window, -0.68, 2.65, 0.5, { roughness: 0.1, metalness: 0.5 });
-  b.box(0.05, 0.6, 0.55, COLORS.window, -0.68, 2.65, -0.5, { roughness: 0.1, metalness: 0.5 });
-  b.box(0.9, 0.55, 0.05, COLORS.window, -1.55, 2.7, 0.93, { roughness: 0.1, metalness: 0.5 });
-  b.box(0.9, 0.55, 0.05, COLORS.window, -1.55, 2.7, -0.93, { roughness: 0.1, metalness: 0.5 });
+  // Tinted glass (see-through, so the cab view can look out of it).
+  const glass = b.glass();
+  b.add(new BoxGeometry(0.04, 0.54, 0.54), glass, -0.68, 2.7, 0.48).castShadow = false;
+  b.add(new BoxGeometry(0.04, 0.54, 0.54), glass, -0.68, 2.7, -0.48).castShadow = false;
+  b.add(new BoxGeometry(0.9, 0.5, 0.04), glass, -1.55, 2.72, 0.93).castShadow = false;
+  b.add(new BoxGeometry(0.9, 0.5, 0.04), glass, -1.55, 2.72, -0.93).castShadow = false;
   // Cowcatcher + headlamp.
   b.add(new ConeGeometry(0.85, 0.7, 4), b.mat(COLORS.locoBlack), 2.75, 0.75, 0, [
     0,

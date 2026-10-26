@@ -2,7 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import type { QualitySetting } from "@/render/effects/quality";
-import { useActiveQualityLevel, useSettingsStore } from "@/game/state/settingsStore";
+import {
+  useActiveQualityLevel,
+  useSettingsStore,
+  type CameraMode,
+} from "@/game/state/settingsStore";
 import { sfx } from "@/audio/sfx";
 
 const QUALITY_OPTIONS: { value: QualitySetting; label: string; hint: string }[] = [
@@ -13,12 +17,20 @@ const QUALITY_OPTIONS: { value: QualitySetting; label: string; hint: string }[] 
   { value: "ultra", label: "Ultra", hint: "Sharpest shadows" },
 ];
 
+const CAMERA_OPTIONS: { value: CameraMode; label: string; hint: string }[] = [
+  { value: "diorama", label: "Diorama", hint: "Overhead view of the whole line" },
+  { value: "cab", label: "Cab", hint: "Ride up front with the driver" },
+];
+
 const CONTROLS: [string, string][] = [
   ["Click / tap the scene", "Lay a piece of track"],
   ["Hold mouse / finger", "Keep laying track"],
   ["Space (hold to repeat)", "Lay track"],
   ["Lay track button", "Lay track"],
-  ["Mouse wheel", "Zoom the camera"],
+  ["V", "Switch Diorama / Cab view"],
+  ["Mouse wheel", "Zoom (Diorama view)"],
+  ["Drag (Cab view)", "Look around"],
+  ["Arrow keys / C (Cab view)", "Look around / re-centre"],
   ["`  (backtick)", "Toggle the debug overlay"],
   ["Esc", "Close this panel"],
 ];
@@ -35,6 +47,8 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const setVolume = useSettingsStore((s) => s.setVolume);
   const setQuality = useSettingsStore((s) => s.setQuality);
   const active = useActiveQualityLevel();
+  const cameraMode = useSettingsStore((s) => s.cameraMode);
+  const setCameraMode = useSettingsStore((s) => s.setCameraMode);
 
   useEffect(() => {
     const d = ref.current;
@@ -134,6 +148,40 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
                   <span className="block font-semibold">{o.label}</span>
                   <span className="block text-[11px] leading-tight text-amber-100/60">
                     {o.value === "auto" ? `Now: ${capitalize(active)}` : o.hint}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section aria-labelledby="settings-camera">
+          <h3 id="settings-camera" className="font-pixel mb-2 text-xs text-amber-200">
+            Camera view
+          </h3>
+          <div
+            role="radiogroup"
+            aria-labelledby="settings-camera"
+            className="grid grid-cols-2 gap-2"
+          >
+            {CAMERA_OPTIONS.map((o) => {
+              const selected = cameraMode === o.value;
+              return (
+                <button
+                  key={o.value}
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setCameraMode(o.value)}
+                  data-testid={`camera-${o.value}`}
+                  className={`rounded-md border px-3 py-2 text-left text-sm transition focus-visible:outline-2 focus-visible:outline-amber-300 ${
+                    selected
+                      ? "border-amber-400 bg-amber-700/50"
+                      : "border-white/10 bg-black/20 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="block font-semibold">{o.label}</span>
+                  <span className="block text-[11px] leading-tight text-amber-100/60">
+                    {o.hint}
                   </span>
                 </button>
               );

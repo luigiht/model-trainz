@@ -5,7 +5,7 @@ src/app/                    Next.js shell (server components): layout, page → 
 src/components/game/        GameRoot (input + event wiring), GameCanvas (scene), GameDriver (sim tick),
                             Terrain, Water, Track, Stations, Train, Steam, CameraRig, RenderProbe,
                             PostEffects, trainFx (mutable fx state)
-src/components/hud/         StatusPanel, UpgradeShop, Toasts, WelcomeBack, SettingsMenu, QualityMenu,
+src/components/hud/         StatusPanel, UpgradeShop, Toasts, WelcomeBack, SettingsMenu, SettingsDialog, ViewToggle,
                             DebugOverlay, LoadingScreen, floaters (imperative DOM pool)
 src/game/content/           upgrades, station names
 src/game/economy/           cost curves + derived stats (pure)
@@ -13,7 +13,7 @@ src/game/simulation/        GameState, rules (legs/stations/fares), route (arc-l
 src/game/save/              versioned save envelope, checksum, backup
 src/game/state/             game.ts (runtime owner of the sim + HUD snapshot store), settingsStore
 src/render/world/           terrain (low-poly chunk builder), TerrainChunkManager, stationModel
-src/render/train/           trainModels (loco + carriages from primitives)
+src/render/train/           trainModels (loco + carriages from primitives), cabInterior (first-person cab)
 src/render/workers/         chunk.worker, ChunkWorkerPool, buildChunk (shared with fallback)
 src/render/effects/         quality tiers, QualityGovernor
 src/audio/sfx.ts            procedural sound effects

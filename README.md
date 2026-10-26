@@ -30,7 +30,10 @@ pnpm dev          # http://localhost:3000
 - When the track reaches the next station, the train departs and earns fares on arrival.
 - Spend coins in the **Upgrades** panel: bigger shovels, steel rails, a track gang that lays track
   automatically (even while you're away), a hotter boiler, fare hikes, extra carriages, golden spikes.
-- Scroll to zoom. `` ` `` toggles the debug overlay. Quality picker, sound toggle and reset are top right.
+- **V** (or the View toggle, bottom left) switches between the **Diorama** view and the first-person
+  **Cab** view. In the cab, **drag** to look around (arrow keys too, **C** re-centres); tap to lay track.
+- Scroll to zoom (Diorama). `` ` `` toggles the debug overlay. **Settings** (top right) has sound,
+  volume, graphics quality, camera view and the full controls list.
 - Progress autosaves to your browser.
 
 ## Docs

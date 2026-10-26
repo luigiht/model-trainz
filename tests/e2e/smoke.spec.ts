@@ -90,3 +90,38 @@ test("debug overlay toggles; settings panel changes quality + volume and they pe
   await expect(page.getByTestId("quality-low")).toHaveAttribute("aria-checked", "true");
   await expect(page.getByTestId("settings-volume")).toHaveValue("40");
 });
+
+test("cab view: toggle, drag to look (no track), tap to lay, V key, persists", async ({ page }) => {
+  await ready(page);
+  await page.getByTestId("view-cab").click();
+  await expect(page.getByTestId("view-cab")).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(2500); // camera transition
+  await page.screenshot({ path: "test-results/screenshots/cab-docked.png" });
+
+  // Dragging in the cab rotates the camera and does NOT lay track…
+  const coins = page.getByTestId("coins");
+  await page.mouse.move(640, 400);
+  await page.mouse.down();
+  await page.mouse.move(520, 380, { steps: 8 });
+  await page.mouse.move(420, 360, { steps: 8 });
+  await page.mouse.up();
+  await expect(coins).toHaveText("$0");
+  await page.waitForTimeout(1000);
+  await page.screenshot({ path: "test-results/screenshots/cab-look.png" });
+  // …while a tap does.
+  await page.mouse.click(640, 400);
+  await expect(coins).toHaveText("$1");
+  await page.keyboard.press("c"); // re-centre
+  // Track laying still works from the cab.
+  for (let i = 0; i < 11; i++) {
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(90);
+  }
+  await page.waitForTimeout(2500);
+  await page.screenshot({ path: "test-results/screenshots/cab-moving.png" });
+  await page.reload();
+  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByTestId("view-cab")).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("v");
+  await expect(page.getByTestId("view-diorama")).toHaveAttribute("aria-pressed", "true");
+});

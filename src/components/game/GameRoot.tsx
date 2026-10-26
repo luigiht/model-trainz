@@ -9,17 +9,36 @@ import { StatusPanel } from "@/components/hud/StatusPanel";
 import { Toasts, toast } from "@/components/hud/Toasts";
 import { UpgradeShop } from "@/components/hud/UpgradeShop";
 import { WelcomeBack } from "@/components/hud/WelcomeBack";
+import { ViewToggle, toggleCameraMode } from "@/components/hud/ViewToggle";
 import { setFloaterLayer, spawnFloater } from "@/components/hud/floaters";
 import { initGame, onGameEvent, playerLayTrack, useHud } from "@/game/state/game";
 import { stationName } from "@/game/content/stations";
 import { formatCoins } from "@/lib/format";
 import { sfx } from "@/audio/sfx";
-import { trainFx } from "./trainFx";
+import { nudgeCabLook, resetCabLook, trainFx } from "./trainFx";
+import { useSettingsStore } from "@/game/state/settingsStore";
 
 const GameCanvas = dynamic(() => import("./GameCanvas"), { ssr: false });
 
 const HOLD_DELAY_MS = 320;
 const HOLD_INTERVAL_MS = 110;
+/** Pointer travel (px) that turns a cab-view press into a camera drag instead of a tap. */
+const DRAG_THRESHOLD_PX = 6;
+/** Radians of cab look rotation per pixel dragged / per arrow-key press. */
+const DRAG_SENSITIVITY = 0.0055;
+const KEY_LOOK_STEP = 0.15;
+
+const isCab = () => useSettingsStore.getState().cameraMode === "cab";
+
+interface Gesture {
+  id: number;
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastY: number;
+  /** pending: undecided tap/hold vs drag (cab only); drag: rotating; laying: tap/hold lays track. */
+  phase: "pending" | "drag" | "laying";
+}
 
 function subscribeReducedMotion(cb: () => void) {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -34,6 +53,7 @@ function layAt(x: number, y: number) {
   if (!res) return;
   trainFx.jolt = 1;
   trainFx.pendingPuffs++;
+  trainFx.pressure = Math.min(1, trainFx.pressure + 0.08);
   sfx.clank();
   if (res.golden) {
     sfx.golden();
@@ -95,19 +115,35 @@ export function GameRoot() {
   // Keyboard: Space / Enter on the scene lays track (hold to repeat at a capped rate).
   useEffect(() => {
     const center = (): [number, number] => [window.innerWidth / 2, window.innerHeight * 0.55];
+    const LOOK_KEYS: Record<string, [number, number]> = {
+      ArrowLeft: [KEY_LOOK_STEP, 0],
+      ArrowRight: [-KEY_LOOK_STEP, 0],
+      ArrowUp: [0, KEY_LOOK_STEP],
+      ArrowDown: [0, -KEY_LOOK_STEP],
+    };
     const onDown = (e: KeyboardEvent) => {
-      if (e.code !== "Space" || e.repeat) return;
-      // Don't lay track behind an open dialog (settings, welcome back).
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const lookKey = e.code in LOOK_KEYS || e.code === "KeyC";
+      if (e.code !== "Space" && e.code !== "KeyV" && !lookKey) return;
+      if (e.repeat && !(e.code in LOOK_KEYS)) return;
+      // Don't act behind an open dialog (settings, welcome back).
       if (document.querySelector("dialog[open]")) return;
       const t = e.target as HTMLElement | null;
-      if (
-        t &&
-        (t.tagName === "BUTTON" ||
-          t.tagName === "INPUT" ||
-          t.tagName === "SELECT" ||
-          t.tagName === "TEXTAREA")
-      )
+      if (t && ["INPUT", "SELECT", "TEXTAREA"].includes(t.tagName)) return;
+      if (e.code === "KeyV") {
+        toggleCameraMode();
         return;
+      }
+      if (lookKey) {
+        // Arrow keys look around / C re-centres — cab view only.
+        if (!isCab()) return;
+        e.preventDefault();
+        if (e.code === "KeyC") resetCabLook();
+        else nudgeCabLook(...LOOK_KEYS[e.code]);
+        return;
+      }
+      // Space on a focused button should press that button, not lay track.
+      if (t?.tagName === "BUTTON") return;
       e.preventDefault();
       layAt(...center());
       startHold(center);
@@ -126,6 +162,23 @@ export function GameRoot() {
   }, [startHold, stopHold]);
 
   const pointer = useRef<[number, number]>([0, 0]);
+  const gesture = useRef<Gesture | null>(null);
+  const cameraMode = useSettingsStore((s) => s.cameraMode);
+
+  const endGesture = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>, commit: boolean) => {
+      const g = gesture.current;
+      if (!g || g.id !== e.pointerId) return;
+      // A cab-view press that never moved and never started holding is a tap: lay one piece.
+      if (commit && g.phase === "pending") layAt(g.startX, g.startY);
+      gesture.current = null;
+      stopHold();
+      e.currentTarget.style.cursor = "";
+      if (e.currentTarget.hasPointerCapture(e.pointerId))
+        e.currentTarget.releasePointerCapture(e.pointerId);
+    },
+    [stopHold],
+  );
 
   return (
     <main
@@ -133,20 +186,64 @@ export function GameRoot() {
       data-ready={ready}
     >
       <div
-        className="absolute inset-0 cursor-pointer touch-none"
+        className={`absolute inset-0 touch-none ${cameraMode === "cab" ? "cursor-grab" : "cursor-pointer"}`}
         data-testid="scene"
         onPointerDown={(e) => {
-          if (e.button !== 0) return;
+          if (e.button !== 0 || gesture.current) return;
           pointer.current = [e.clientX, e.clientY];
-          layAt(e.clientX, e.clientY);
-          startHold(() => pointer.current);
+          const g: Gesture = {
+            id: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            lastX: e.clientX,
+            lastY: e.clientY,
+            phase: isCab() ? "pending" : "laying",
+          };
+          gesture.current = g;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          if (g.phase === "laying") {
+            // Diorama: lay immediately, hold to repeat.
+            layAt(e.clientX, e.clientY);
+            startHold(() => pointer.current);
+          } else {
+            // Cab: wait to see if this is a drag. Holding still lays track continuously.
+            stopHold();
+            hold.current.delay = window.setTimeout(() => {
+              if (gesture.current !== g || g.phase !== "pending") return;
+              g.phase = "laying";
+              layAt(...pointer.current);
+              hold.current.interval = window.setInterval(
+                () => layAt(...pointer.current),
+                HOLD_INTERVAL_MS,
+              );
+            }, HOLD_DELAY_MS);
+          }
         }}
         onPointerMove={(e) => {
           pointer.current = [e.clientX, e.clientY];
+          const g = gesture.current;
+          if (!g || g.id !== e.pointerId) return;
+          if (
+            g.phase === "pending" &&
+            Math.hypot(e.clientX - g.startX, e.clientY - g.startY) > DRAG_THRESHOLD_PX
+          ) {
+            g.phase = "drag";
+            stopHold();
+            e.currentTarget.style.cursor = "grabbing";
+          }
+          if (g.phase === "drag") {
+            // "Grab the world": drag right turns the view left, drag down tilts it up.
+            nudgeCabLook(
+              (e.clientX - g.lastX) * DRAG_SENSITIVITY,
+              (e.clientY - g.lastY) * DRAG_SENSITIVITY,
+            );
+          }
+          g.lastX = e.clientX;
+          g.lastY = e.clientY;
         }}
-        onPointerUp={stopHold}
-        onPointerLeave={stopHold}
-        onPointerCancel={stopHold}
+        onPointerUp={(e) => endGesture(e, true)}
+        onPointerCancel={(e) => endGesture(e, false)}
+        onLostPointerCapture={(e) => endGesture(e, false)}
       >
         <GameCanvas onReady={onReady} reducedMotion={reducedMotion} />
       </div>
@@ -168,7 +265,7 @@ export function GameRoot() {
             <UpgradeShop />
           </div>
         </div>
-        <div className="flex flex-col items-center gap-2">
+        <div className="relative flex flex-col items-center gap-2">
           {firstTime && ready && (
             <p className="hint panel px-4 py-2 text-center text-sm text-amber-100">
               Click the station (or anywhere on the land) to lay track. Hold to keep going!
@@ -194,6 +291,9 @@ export function GameRoot() {
           >
             Lay track <span className="opacity-70">(Space)</span>
           </button>
+          <div className="pointer-events-auto sm:absolute sm:bottom-1 sm:left-0">
+            <ViewToggle />
+          </div>
         </div>
       </div>
 
