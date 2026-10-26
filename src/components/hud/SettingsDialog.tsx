@@ -2,12 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import type { QualitySetting } from "@/render/effects/quality";
-import {
-  useActiveQualityLevel,
-  useSettingsStore,
-  type CameraMode,
-} from "@/game/state/settingsStore";
+import { useActiveQualityLevel, useSettingsStore } from "@/game/state/settingsStore";
 import { sfx } from "@/audio/sfx";
+import { Credit } from "./Credit";
 
 const QUALITY_OPTIONS: { value: QualitySetting; label: string; hint: string }[] = [
   { value: "auto", label: "Auto", hint: "Adjusts to your device" },
@@ -15,11 +12,6 @@ const QUALITY_OPTIONS: { value: QualitySetting; label: string; hint: string }[] 
   { value: "medium", label: "Medium", hint: "Shadows + bloom" },
   { value: "high", label: "High", hint: "Adds ambient occlusion" },
   { value: "ultra", label: "Ultra", hint: "Sharpest shadows" },
-];
-
-const CAMERA_OPTIONS: { value: CameraMode; label: string; hint: string }[] = [
-  { value: "diorama", label: "Diorama", hint: "Overhead view of the whole line" },
-  { value: "cab", label: "Cab", hint: "Ride up front with the driver" },
 ];
 
 const CONTROLS: [string, string][] = [
@@ -47,8 +39,6 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const setVolume = useSettingsStore((s) => s.setVolume);
   const setQuality = useSettingsStore((s) => s.setQuality);
   const active = useActiveQualityLevel();
-  const cameraMode = useSettingsStore((s) => s.cameraMode);
-  const setCameraMode = useSettingsStore((s) => s.setCameraMode);
 
   useEffect(() => {
     const d = ref.current;
@@ -155,40 +145,6 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           </div>
         </section>
 
-        <section aria-labelledby="settings-camera">
-          <h3 id="settings-camera" className="font-pixel mb-2 text-xs text-amber-200">
-            Camera view
-          </h3>
-          <div
-            role="radiogroup"
-            aria-labelledby="settings-camera"
-            className="grid grid-cols-2 gap-2"
-          >
-            {CAMERA_OPTIONS.map((o) => {
-              const selected = cameraMode === o.value;
-              return (
-                <button
-                  key={o.value}
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setCameraMode(o.value)}
-                  data-testid={`camera-${o.value}`}
-                  className={`rounded-md border px-3 py-2 text-left text-sm transition focus-visible:outline-2 focus-visible:outline-amber-300 ${
-                    selected
-                      ? "border-amber-400 bg-amber-700/50"
-                      : "border-white/10 bg-black/20 hover:bg-white/10"
-                  }`}
-                >
-                  <span className="block font-semibold">{o.label}</span>
-                  <span className="block text-xs leading-tight text-amber-100/60">
-                    {o.hint}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
         <section aria-labelledby="settings-controls">
           <h3 id="settings-controls" className="font-pixel mb-2 text-xs text-amber-200">
             Controls
@@ -209,6 +165,10 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
             </tbody>
           </table>
         </section>
+
+        <footer className="border-t border-white/10 pt-3">
+          <Credit className="text-center" />
+        </footer>
       </div>
     </dialog>
   );
