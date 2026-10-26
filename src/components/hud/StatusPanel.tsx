@@ -43,11 +43,11 @@ export function StatusPanel() {
         {formatNumber(Math.floor(h.distance))} m travelled
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-2 text-sm">
-        <span className="font-semibold text-amber-50">{from}</span>
+        <span className="font-body text-amber-50">{from}</span>
         <span aria-hidden className="text-amber-200/60">
           →
         </span>
-        <span className="font-semibold text-amber-50">{to}</span>
+        <span className="font-body text-amber-50">{to}</span>
       </div>
       <div
         className="mt-1 h-3 overflow-hidden rounded-full border border-amber-900/60 bg-black/40"

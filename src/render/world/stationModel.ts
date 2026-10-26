@@ -6,8 +6,10 @@
 import {
   BoxGeometry,
   CylinderGeometry,
+  ExtrudeGeometry,
   Group,
   Mesh,
+  Shape,
   type BufferGeometry,
   type Material,
 } from "three";
@@ -50,11 +52,49 @@ export function buildStation(variant: number): StationModel {
   add(new BoxGeometry(PLATFORM_LENGTH, 0.75, 3.2), stone, 0, 0.1, -3.05);
   add(new BoxGeometry(PLATFORM_LENGTH, 0.06, 0.3), mat(0xf3d36b), 0, 0.5, -1.6);
 
-  // Booking office.
-  add(new BoxGeometry(6, 2.8, 3.4), walls, -1, 1.85, -6.4);
-  const gable = add(new CylinderGeometry(2.4, 2.4, 6.6, 3), roof, -1, 3.95, -6.4);
-  gable.rotation.set(0, 0, Math.PI / 2);
-  gable.scale.set(0.55, 1, 0.85);
+  // Booking office: walls, gable infill, two pitched roof slabs and a ridge cap.
+  const office = { x: -1, z: -6.4, w: 6, d: 3.4, top: 3.25 };
+  add(new BoxGeometry(office.w, 2.8, office.d), walls, office.x, office.top - 1.4, office.z);
+  const half = office.d / 2;
+  const rise = 1.3;
+  const gableShape = new Shape();
+  gableShape.moveTo(-half, 0);
+  gableShape.lineTo(half, 0);
+  gableShape.lineTo(0, rise);
+  gableShape.closePath();
+  const gableGeo = new ExtrudeGeometry(gableShape, { depth: office.w, bevelEnabled: false });
+  gableGeo.rotateY(Math.PI / 2).translate(-office.w / 2, 0, 0);
+  add(gableGeo, walls, office.x, office.top, office.z);
+
+  const pitch = Math.atan2(rise, half);
+  const slope = Math.hypot(rise, half);
+  const overhang = 0.45;
+  const thick = 0.16;
+  const slabLen = slope + overhang;
+  const ridgeY = office.top + rise;
+  for (const side of [1, -1]) {
+    // Down-slope direction and outward normal for this side of the ridge.
+    const dy = -Math.sin(pitch);
+    const dz = Math.cos(pitch) * side;
+    const ny = Math.cos(pitch);
+    const nz = Math.sin(pitch) * side;
+    const slab = add(
+      new BoxGeometry(office.w + 0.6, thick, slabLen),
+      roof,
+      office.x,
+      ridgeY + dy * (slabLen / 2) + ny * (thick / 2),
+      office.z + dz * (slabLen / 2) + nz * (thick / 2),
+    );
+    slab.rotation.x = pitch * side;
+  }
+  const ridge = add(
+    new BoxGeometry(office.w + 0.7, 0.16, 0.26),
+    roof,
+    office.x,
+    ridgeY + 0.16,
+    office.z,
+  );
+  ridge.rotation.x = Math.PI / 4;
   add(new BoxGeometry(0.6, 1.4, 0.6), mat(0xa0533f), 1.1, 4.6, -6.8); // chimney
   add(new BoxGeometry(1, 1.8, 0.08), wood, -1, 1.35, -4.66); // door
   const lit = mat(COLORS.windowLit, {
@@ -64,10 +104,19 @@ export function buildStation(variant: number): StationModel {
   });
   for (const x of [-3, 1]) add(new BoxGeometry(1.1, 0.9, 0.08), lit, x, 2.1, -4.66);
 
-  // Canopy on posts over the platform.
-  add(new BoxGeometry(9, 0.18, 2.4), roof, 1.5, 3.4, -3.1);
-  for (const x of [-2.5, 1.5, 5.5])
-    add(new CylinderGeometry(0.09, 0.09, 2.9, 6), dark, x, 1.95, -2.1);
+  // Lean-to canopy: tucked under the office eave, falling gently towards the track.
+  const canopyDrop = 0.3;
+  const canopyDepth = 2.8;
+  const canopy = add(
+    new BoxGeometry(8.5, 0.16, Math.hypot(canopyDepth, canopyDrop)),
+    roof,
+    1.25,
+    2.88,
+    -3.3,
+  );
+  canopy.rotation.x = Math.atan2(canopyDrop, canopyDepth);
+  for (const x of [-2.5, 1.5, 5])
+    add(new CylinderGeometry(0.09, 0.09, 2.23, 6), dark, x, 1.585, -2.1);
 
   // Lamps.
   const lamp = mat(COLORS.lamp, { emissive: COLORS.lamp, emissiveIntensity: 3 });

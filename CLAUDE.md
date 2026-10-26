@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Rail Baron Clicker
+# Model Trainz
 
 A cozy 3D incremental/clicker game about building a railway. The train waits at a station; each
 click (or Space / hold) lays a piece of track in front of it. When the track reaches the next

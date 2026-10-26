@@ -71,7 +71,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
     >
       <div className="flex max-h-[calc(100dvh-3rem)] flex-col gap-5 overflow-y-auto p-5">
         <header className="flex items-center justify-between">
-          <h2 id="settings-title" className="font-pixel text-lg text-amber-300">
+          <h2 id="settings-title" className="font-body text-lg text-amber-300">
             Settings
           </h2>
           <button
@@ -146,7 +146,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
                   }`}
                 >
                   <span className="block font-semibold">{o.label}</span>
-                  <span className="block text-[11px] leading-tight text-amber-100/60">
+                  <span className="block text-xs leading-tight text-amber-100/60">
                     {o.value === "auto" ? `Now: ${capitalize(active)}` : o.hint}
                   </span>
                 </button>
@@ -180,7 +180,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
                   }`}
                 >
                   <span className="block font-semibold">{o.label}</span>
-                  <span className="block text-[11px] leading-tight text-amber-100/60">
+                  <span className="block text-xs leading-tight text-amber-100/60">
                     {o.hint}
                   </span>
                 </button>

@@ -27,8 +27,8 @@ export function LoadingScreen({ visible }: { visible: boolean }) {
         visible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
-      <h1 className="font-pixel text-2xl tracking-wide text-amber-300 sm:text-4xl">
-        Rail Baron Clicker
+      <h1 className="font-body text-2xl tracking-wide text-amber-300 sm:text-4xl">
+        Model Trainz
       </h1>
       <div className="loading-train relative h-16 w-64" aria-hidden>
         <div className="loading-train__body" />

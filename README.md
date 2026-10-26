@@ -1,41 +1,92 @@
-# Rail Baron Clicker
+# Model Trainz
 
-A cozy 3D railway clicker: click to lay track in front of your little steam train, watch it chuff
-to the next station, collect fares and upgrade your way to an automatic track gang. Low-poly world
-with soft shadows and bloom. Runs entirely in the browser.
+A cozy 3D incremental game about building a railway, one piece of track at a time. It runs
+entirely in the browser.
 
-> Work in progress. See `docs/PLAN.md` for milestone status.
+![Model Trainz: the train pulled in at a station, with the status panel, upgrades and Lay track button](docs/screenshot.png)
 
-## Run
+## Gameplay
+
+Your little steam train waits at a station. Between it and the next station there's nothing but
+countryside, so it's up to you to build the line.
+
+- **Lay track.** Click anywhere on the scene, press or hold **Space**, or use the **Lay track**
+  button. Each click lays track in front of the train; hold to keep going.
+- **Run the line.** When the track reaches the next station the train departs, chuffs along the
+  new stretch and collects fares when it pulls in. Then the next leg begins.
+- **Upgrade.** Spend coins in the **Upgrades** panel on the right (collapse it with **Hide/Show**):
+
+  | Upgrade        | Effect                               |
+  | -------------- | ------------------------------------ |
+  | Bigger Shovels | +1 track piece per click             |
+  | Steel Rails    | +$1 for every track piece laid       |
+  | Track Gang     | +0.5 pieces/sec, laid automatically  |
+  | Hotter Boiler  | +20% train speed                     |
+  | Fare Hike      | +25% station fares                   |
+  | Extra Carriage | +1 carriage on the train, +50% fares |
+  | Golden Spikes  | +2% chance that a click pays out 20× |
+
+- **Keep going while away.** The track gang keeps working when the tab is closed; a welcome-back
+  summary shows what they earned.
+- **Pick a view.** Press **V** (or use the toggle bottom left) to switch between the overhead
+  **Diorama** and the first-person **Cab**. Scroll to zoom the diorama; in the cab, drag or use the
+  arrow keys to look around and **C** to re-centre.
+- **Settings** (top right) cover sound, volume, graphics quality (Auto, Low, Medium, High, Ultra),
+  camera view and the full list of controls.
+
+Progress is saved automatically in your browser.
+
+## Toolstack
+
+| Area                | Tools                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------- |
+| Framework           | [Next.js](https://nextjs.org) 16 (App Router), React 19, TypeScript (strict)                 |
+| 3D rendering        | [three.js](https://threejs.org) via React Three Fiber and drei                               |
+| Post-processing     | `postprocessing` + `@react-three/postprocessing` (bloom, SSAO, tone mapping, SMAA, vignette) |
+| World generation    | `simplex-noise` terrain, meshed in Web Workers                                               |
+| State               | Zustand                                                                                      |
+| UI                  | Tailwind CSS 4                                                                               |
+| Audio               | Web Audio API (all sound effects synthesised at runtime)                                     |
+| Testing and quality | Vitest, Playwright, ESLint, Prettier                                                         |
+| Package manager     | pnpm                                                                                         |
+
+All models, textures and sounds are generated procedurally; there are no external art assets.
+
+## Getting started
+
+### Run locally
+
+You need Node.js 20 or newer and pnpm. The pnpm version is pinned in `package.json`; run
+`corepack enable` once to use it automatically.
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:3000
+pnpm dev
 ```
 
-| Script           | What it does                         |
-| ---------------- | ------------------------------------ |
-| `pnpm build`     | Production build                     |
-| `pnpm start`     | Serve the production build           |
-| `pnpm typecheck` | `tsc --noEmit`                       |
-| `pnpm lint`      | ESLint (zero warnings allowed)       |
-| `pnpm test`      | Vitest unit tests                    |
-| `pnpm test:e2e`  | Playwright smoke tests + screenshots |
-| `pnpm format`    | Prettier                             |
+Open [http://localhost:3000](http://localhost:3000).
 
-## How to play
+### Useful scripts
 
-- **Click the scene** (or press/hold **Space**, or the **Lay track** button) to lay track in front of
-  the train. Hold to keep laying (capped at 12 pieces of effort per second).
-- When the track reaches the next station, the train departs and earns fares on arrival.
-- Spend coins in the **Upgrades** panel: bigger shovels, steel rails, a track gang that lays track
-  automatically (even while you're away), a hotter boiler, fare hikes, extra carriages, golden spikes.
-- **V** (or the View toggle, bottom left) switches between the **Diorama** view and the first-person
-  **Cab** view. In the cab, **drag** to look around (arrow keys too, **C** re-centres); tap to lay track.
-- Scroll to zoom (Diorama). `` ` `` toggles the debug overlay. **Settings** (top right) has sound,
-  volume, graphics quality, camera view and the full controls list.
-- Progress autosaves to your browser.
+| Script            | What it does                                                 |
+| ----------------- | ------------------------------------------------------------ |
+| `pnpm build`      | Production build                                             |
+| `pnpm start`      | Serve the production build                                   |
+| `pnpm typecheck`  | Type-check with `tsc`                                        |
+| `pnpm lint`       | ESLint (zero warnings allowed)                               |
+| `pnpm test`       | Unit tests (Vitest)                                          |
+| `pnpm test:e2e`   | Browser smoke tests (Playwright)                             |
+| `pnpm screenshot` | Re-capture `docs/screenshot.png` while `pnpm dev` is running |
+| `pnpm format`     | Format with Prettier                                         |
 
-## Docs
+Stop `pnpm dev` before running `pnpm build`; both write to `.next/`.
 
-`docs/PLAN.md` · `docs/ARCHITECTURE.md` · `docs/DECISIONS.md` · `CLAUDE.md` (project rules)
+### Deploy to Vercel
+
+1. Push the repository to GitHub, GitLab or Bitbucket and import it at
+   [vercel.com/new](https://vercel.com/new).
+2. Keep the detected Next.js defaults.
+3. Add the environment variable `ENABLE_EXPERIMENTAL_COREPACK=1` so Vercel uses the pinned pnpm
+   version.
+4. If you use a custom domain, also set `NEXT_PUBLIC_SITE_URL` (for example
+   `https://modeltrainz.example`) so social preview images link to it.

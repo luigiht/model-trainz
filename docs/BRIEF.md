@@ -1,4 +1,4 @@
-# Rail Baron Clicker — design brief (condensed)
+# Model Trainz — design brief (condensed)
 
 > **User direction after M1 (overrides the brief where they conflict):** make it playable now, with a
 > core loop where _the player clicks at the station and a piece of track is placed in front of the

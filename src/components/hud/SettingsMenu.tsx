@@ -13,7 +13,7 @@ export function SettingsMenu() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className="font-body flex flex-wrap items-center justify-end gap-2">
       <button
         className="panel px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-amber-300"
         onClick={(e) => {

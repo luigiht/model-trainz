@@ -13,8 +13,8 @@ export function ViewToggle() {
   const mode = useSettingsStore((s) => s.cameraMode);
   const setMode = useSettingsStore((s) => s.setCameraMode);
   return (
-    <div className="panel flex items-center gap-1 p-1" role="group" aria-label="Camera view (V)">
-      <span className="font-pixel px-2 text-[10px] text-amber-200">View</span>
+    <div className="panel font-body flex items-center gap-1 p-1" role="group" aria-label="Camera view (V)">
+      <span className="font-pixel px-2 text-xs text-amber-200">View</span>
       {VIEWS.map((v) => (
         <button
           key={v.mode}

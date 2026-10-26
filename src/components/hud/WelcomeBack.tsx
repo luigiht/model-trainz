@@ -31,7 +31,7 @@ export function WelcomeBack() {
     >
       {summary && (
         <>
-          <h2 id="welcome-title" className="font-pixel text-lg text-amber-300">
+          <h2 id="welcome-title" className="font-body text-lg text-amber-300">
             Welcome back!
           </h2>
           <p className="mt-2 text-sm">

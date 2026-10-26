@@ -249,21 +249,22 @@ export function GameRoot() {
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="pointer-events-auto">
-            <StatusPanel />
+        <div className="flex min-h-0 flex-1 items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <div className="pointer-events-auto self-start">
+              <StatusPanel />
+            </div>
+            <div className="pt-2">
+              <Toasts />
+            </div>
           </div>
           <div className="pointer-events-auto">
             <SettingsMenu />
           </div>
         </div>
-        <div className="flex min-h-0 flex-1 items-start justify-between gap-3">
-          <div className="flex-1 pt-2">
-            <Toasts />
-          </div>
-          <div className="pointer-events-auto min-h-0">
-            <UpgradeShop />
-          </div>
+        {/* Centred on screen; the height cap keeps it clear of the top and bottom bars. */}
+        <div className="pointer-events-auto absolute right-3 top-1/2 flex max-h-[calc(100dvh-9rem)] -translate-y-1/2">
+          <UpgradeShop />
         </div>
         <div className="relative flex flex-col items-center gap-2">
           {firstTime && ready && (
@@ -272,7 +273,7 @@ export function GameRoot() {
             </p>
           )}
           <button
-            className="pointer-events-auto font-pixel rounded-lg border-2 border-amber-300 bg-gradient-to-b from-amber-400 to-amber-600 px-6 py-3 text-sm text-[#2a1a08] shadow-lg transition active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
+            className="pointer-events-auto font-body rounded-lg border-2 border-amber-300 bg-gradient-to-b from-amber-400 to-amber-600 px-6 py-3 text-sm text-[#2a1a08] shadow-lg transition active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
             data-testid="lay-track"
             onPointerDown={(e) => {
               const r = e.currentTarget.getBoundingClientRect();

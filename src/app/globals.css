@@ -4,12 +4,29 @@
   --font-sans: var(--font-sans-ui);
   --font-mono: var(--font-mono-ui);
   --font-pixel: var(--font-pixel);
+  --font-body: var(--font-body-ui), var(--font-sans-ui), sans-serif;
+}
+
+/* Small text never drops below 12px, whatever the HUD scale. */
+@theme {
+  --text-xs: max(12px, 0.75rem);
+  --text-sm: max(12px, 0.875rem);
 }
 
 :root {
   --iron: #24201b;
   --brass: #c9a24a;
   --parchment: #f3e6c4;
+}
+
+/* HUD scale: everything is rem-based, so this sizes the whole interface. */
+html {
+  font-size: 91.875%;
+}
+@media (max-height: 820px) {
+  html {
+    font-size: 78.75%;
+  }
 }
 
 body {
