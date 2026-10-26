@@ -18,6 +18,7 @@ import { createNoise2D, type NoiseFunction2D } from "simplex-noise";
 import { hash3f, mulberry32 } from "@/lib/rng";
 import { smoothstep } from "@/lib/math";
 import { Route, SEA_LEVEL } from "@/game/simulation/route";
+import { vivid } from "@/render/palette";
 
 export const CHUNK_SIZE = 32;
 const CELL = 2;
@@ -76,18 +77,19 @@ export interface TerrainChunkData {
   colors: Float32Array;
 }
 
+// Base palette, saturated by ENV_SATURATION (rocks/snow get a gentler boost so they stay neutral).
 const PALETTE = {
-  grass: [0x86b95b, 0x7aad52, 0x93c466, 0x6fa24c].map((h) => new Color(h)),
-  meadow: new Color(0xa7c96a),
-  sand: new Color(0xdcc78f),
-  wetSand: new Color(0xb9a575),
-  rock: new Color(0x8f8a82),
-  darkRock: new Color(0x75716b),
+  grass: [0x86b95b, 0x7aad52, 0x93c466, 0x6fa24c].map((h) => vivid(h)),
+  meadow: vivid(0xb3cc5e),
+  sand: vivid(0xdcc78f),
+  wetSand: vivid(0xb9a575),
+  rock: vivid(0x8f8a82, 1.15),
+  darkRock: vivid(0x75716b, 1.15),
   snow: new Color(0xf1f4f6),
-  trunk: new Color(0x6e4c30),
-  leaves: [0x4f8f45, 0x5b9c4a, 0x447f3d, 0x6aa84f].map((h) => new Color(h)),
-  pine: [0x2f6b4f, 0x3a7a55, 0x285e45].map((h) => new Color(h)),
-  autumn: [0xd98e3a, 0xc9693a].map((h) => new Color(h)),
+  trunk: vivid(0x6e4c30),
+  leaves: [0x4f8f45, 0x5b9c4a, 0x447f3d, 0x6aa84f].map((h) => vivid(h)),
+  pine: [0x2f6b4f, 0x3a7a55, 0x285e45].map((h) => vivid(h)),
+  autumn: [0xd98e3a, 0xc9693a, 0xe0b23a].map((h) => vivid(h)),
 };
 
 /** Growable flat-shaded triangle soup. */
@@ -259,8 +261,8 @@ function placeProps(field: TerrainField, soup: Soup, cx: number, cz: number) {
           soup.geometry(t.cone, m, jitterColor(col, r(8)));
         } else {
           const col =
-            r(9) < 0.08
-              ? PALETTE.autumn[Math.floor(r(6) * 2)]
+            r(9) < 0.1
+              ? PALETTE.autumn[Math.floor(r(6) * PALETTE.autumn.length)]
               : PALETTE.leaves[Math.floor(r(6) * 4)];
           m.compose(
             p.set(x, h + 1.9 * scale, z),

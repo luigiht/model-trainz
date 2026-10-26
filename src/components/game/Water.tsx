@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { MeshStandardMaterial, PlaneGeometry, type Mesh } from "three";
 import { SEA_LEVEL, type RoutePoint } from "@/game/simulation/route";
 import { game } from "@/game/state/game";
+import { vivid } from "@/render/palette";
 
 const SIZE = 420;
 const focus: RoutePoint = { x: 0, y: 0, z: 0, dx: 1, dy: 0, dz: 0 };
@@ -19,7 +20,7 @@ export function Water() {
     const geo = new PlaneGeometry(SIZE, SIZE, 70, 70).rotateX(-Math.PI / 2).toNonIndexed();
     const uniforms = { uTime: { value: 0 } };
     const mat = new MeshStandardMaterial({
-      color: 0x3f8fc0,
+      color: vivid(0x3f8fc0),
       flatShading: true,
       roughness: 0.15,
       metalness: 0.1,
