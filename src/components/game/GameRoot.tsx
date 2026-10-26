@@ -97,6 +97,8 @@ export function GameRoot() {
     const center = (): [number, number] => [window.innerWidth / 2, window.innerHeight * 0.55];
     const onDown = (e: KeyboardEvent) => {
       if (e.code !== "Space" || e.repeat) return;
+      // Don't lay track behind an open dialog (settings, welcome back).
+      if (document.querySelector("dialog[open]")) return;
       const t = e.target as HTMLElement | null;
       if (
         t &&

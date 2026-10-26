@@ -9,7 +9,8 @@ let master: GainNode | null = null;
 let noise: AudioBuffer | null = null;
 
 function audio(): AudioContext | null {
-  if (useSettingsStore.getState().muted) return null;
+  const { muted, volume } = useSettingsStore.getState();
+  if (muted || volume === 0) return null;
   if (!ctx) {
     try {
       ctx = new AudioContext();
@@ -24,6 +25,7 @@ function audio(): AudioContext | null {
     }
   }
   if (ctx.state === "suspended") void ctx.resume();
+  master!.gain.value = 0.6 * useSettingsStore.getState().volume;
   return ctx;
 }
 

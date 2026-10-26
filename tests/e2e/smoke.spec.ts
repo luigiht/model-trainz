@@ -66,11 +66,27 @@ test("buying an upgrade works and progress persists across reloads", async ({ pa
   await expect(page.locator("[data-testid='buy-shovel'] span[aria-hidden]")).toHaveText("1");
 });
 
-test("debug overlay toggles with backtick and quality setting persists", async ({ page }) => {
+test("debug overlay toggles; settings panel changes quality + volume and they persist", async ({
+  page,
+}) => {
   await ready(page);
   await page.keyboard.press("`");
   await expect(page.getByTestId("debug-overlay")).toContainText(/chunks\s+[1-9]/);
-  await page.getByTestId("quality-select").selectOption("low");
+  await page.keyboard.press("`");
+  await page.getByTestId("settings").click();
+  const dialog = page.getByTestId("settings-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("Controls");
+  await page.getByTestId("quality-low").click();
+  await expect(page.getByTestId("quality-low")).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByTestId("quality-auto")).toHaveAttribute("aria-checked", "false");
+  await page.getByTestId("settings-volume").fill("40");
+  await page.screenshot({ path: "test-results/screenshots/settings.png" });
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
   await page.reload();
-  await expect(page.getByTestId("quality-select")).toHaveValue("low");
+  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await page.getByTestId("settings").click();
+  await expect(page.getByTestId("quality-low")).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByTestId("settings-volume")).toHaveValue("40");
 });
