@@ -55,11 +55,13 @@ export function Steam({ reducedMotion }: { reducedMotion: boolean }) {
   }, [puffs, geo]);
 
   useFrame((_, dt) => {
+    const exhaust = trainFx.exhaust;
     const emit = (size: number, up: number) => {
       const p = puffs[next.current];
       next.current = (next.current + 1) % POOL;
       p.age = 0;
-      p.size = size;
+      p.size = exhaust === "diesel" ? size * 0.6 : size;
+      p.mat.color.setHex(exhaust === "diesel" ? 0x5b5852 : 0xf4f1ea);
       p.vx = (Math.random() - 0.5) * 0.4 - game.state.trainV * 0.35;
       p.vy = up;
       p.vz = (Math.random() - 0.5) * 0.4 + 0.25; // gentle breeze
@@ -70,14 +72,14 @@ export function Steam({ reducedMotion }: { reducedMotion: boolean }) {
 
     const v = game.state.trainV;
     timer.current -= dt;
-    if (timer.current <= 0) {
+    if (timer.current <= 0 && exhaust) {
       emit(v > 0.1 ? 0.7 : 0.45, v > 0.1 ? 1.6 : 0.9);
       // Chuff rhythm speeds up with the train.
       timer.current = v > 0.1 ? Math.max(0.12, 0.55 - v * 0.04) : 1.4;
     }
     while (trainFx.pendingPuffs > 0) {
       trainFx.pendingPuffs--;
-      emit(1.1, 2.4);
+      if (exhaust) emit(1.1, 2.4);
     }
 
     for (const p of puffs) {

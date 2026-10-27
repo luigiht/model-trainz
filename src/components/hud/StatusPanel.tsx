@@ -3,7 +3,7 @@
 import { useShallow } from "zustand/react/shallow";
 import { useHud } from "@/game/state/game";
 import { stationName } from "@/game/content/stations";
-import { formatCoins, formatNumber } from "@/lib/format";
+import { formatCoins, formatDistance, formatNumber } from "@/lib/format";
 
 /** Coins, route and progress toward the next station. */
 export function StatusPanel() {
@@ -29,7 +29,7 @@ export function StatusPanel() {
         : `All aboard for ${to}!`;
 
   return (
-    <section className="panel w-[min(22rem,calc(100vw-1.5rem))] p-3" aria-label="Status">
+    <section className="panel w-full p-3" aria-label="Status">
       <div
         className="font-pixel text-3xl leading-none text-amber-300"
         data-testid="coins"
@@ -40,7 +40,7 @@ export function StatusPanel() {
       <div className="mt-1 text-xs text-amber-100/70">
         {formatNumber(h.perClick)} piece{h.perClick === 1 ? "" : "s"}/click
         {h.autoLay > 0 && <> · {formatNumber(h.autoLay)}/sec by the track gang</>} ·{" "}
-        {formatNumber(Math.floor(h.distance))} m travelled
+        {formatDistance(h.distance)} travelled
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-2 text-sm">
         <span className="font-body text-amber-50">{from}</span>

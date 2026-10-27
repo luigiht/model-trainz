@@ -4,11 +4,22 @@
  */
 import { seedFromString } from "@/lib/rng";
 import { emptyLevels } from "@/game/economy/economy";
+import { DEFAULT_TRAIN_SET, isTrainSetId } from "@/game/content/trainSets";
 import { createInitialState, type GameState } from "@/game/simulation/GameState";
 
 export const SAVE_VERSION = 1;
+/** The single slot used before Game IDs; a first visit still starts from it. */
 export const SAVE_KEY = "rbc-save";
 export const BACKUP_KEY = "rbc-save-backup";
+
+let slotKey = SAVE_KEY;
+let backupKey = BACKUP_KEY;
+
+/** Points local saves at one game's own slot. */
+export function setSaveSlot(gameId: string) {
+  slotKey = `mt-save:${gameId}`;
+  backupKey = `mt-save-backup:${gameId}`;
+}
 
 interface SaveEnvelope {
   v: number;
@@ -54,14 +65,20 @@ export function deserializeSave(raw: string): LoadResult {
   const merged = { ...fresh, ...s } as GameState;
   merged.levels = { ...emptyLevels(), ...(s.levels as object) };
   merged.stats = { ...fresh.stats, ...(s.stats as object) };
+  const owned = Array.isArray(s.ownedSets) ? s.ownedSets.filter(isTrainSetId) : [];
+  merged.ownedSets = [...new Set([DEFAULT_TRAIN_SET, ...owned])];
+  merged.trainSet =
+    isTrainSetId(s.trainSet) && merged.ownedSets.includes(s.trainSet)
+      ? s.trainSet
+      : DEFAULT_TRAIN_SET;
   return { ok: true, state: merged, savedAt: env.savedAt };
 }
 
 export function writeSave(state: GameState): string | null {
   try {
-    const prev = localStorage.getItem(SAVE_KEY);
-    if (prev) localStorage.setItem(BACKUP_KEY, prev);
-    localStorage.setItem(SAVE_KEY, serializeSave(state));
+    const prev = localStorage.getItem(slotKey);
+    if (prev) localStorage.setItem(backupKey, prev);
+    localStorage.setItem(slotKey, serializeSave(state));
     return null;
   } catch (e) {
     return e instanceof Error ? e.message : "Could not write save.";
@@ -70,11 +87,11 @@ export function writeSave(state: GameState): string | null {
 
 export function readSave(): LoadResult | null {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    const raw = localStorage.getItem(slotKey);
     if (!raw) return null;
     const res = deserializeSave(raw);
     if (res.ok) return res;
-    const backup = localStorage.getItem(BACKUP_KEY);
+    const backup = localStorage.getItem(backupKey);
     return backup ? deserializeSave(backup) : res;
   } catch {
     return null;
@@ -83,8 +100,8 @@ export function readSave(): LoadResult | null {
 
 export function clearSave() {
   try {
-    localStorage.removeItem(SAVE_KEY);
-    localStorage.removeItem(BACKUP_KEY);
+    localStorage.removeItem(slotKey);
+    localStorage.removeItem(backupKey);
   } catch {
     /* storage unavailable: nothing to clear */
   }

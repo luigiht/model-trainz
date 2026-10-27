@@ -107,3 +107,93 @@ Newest at the bottom. Each entry: decision — why.
   tap (lays one piece), holding still for 320 ms = continuous laying, moving past 6 px = camera drag
   (lays nothing). Diorama view keeps lay-on-press. Look is "grab the world", clamped to ±109° yaw,
   -40°/+29° pitch, eased. Keyboard equivalents: arrow keys look, C re-centres, V switches view.
+
+## Loading screen
+
+- **A ride, not a spinner.** The loader shows the logo over a small R3F scene built from the game's
+  own pieces: streamed terrain chunks (`TerrainChunkManager`, radius 3, no shadows), the shared
+  track-piece instancing and drop animation (`trackPieces.ts`, also used by `Track`), the heritage
+  engine and its cab interior, seen from the in-game cab camera pose. It loops the game's rhythm:
+  track drops in ahead, then the engine rolls up to the railhead. A fixed seed/start point where
+  the line bends toward the driver's window keeps the new track in view.
+- **Cost:** a second, small WebGL context only while loading; it fades in once its first terrain
+  is ready and unmounts ~0.8 s after the game is ready. Reduced motion shows a still frame.
+
+## Players and Game IDs
+
+- **First visit asks for a name** (and an optional Game ID to continue an existing game) on the
+  loading screen; later visits go straight in. The profile `{ name, gameId }` lives in
+  localStorage (`mt-profile`); each game has its own local save slot (`mt-save:<id>`).
+- **Game IDs** are 60-bit random Crockford-base32 strings (`7K2M-9QXP-4HCW`), so they can't be
+  guessed. Typed IDs are normalised (upper case, no spaces; 4–24 letters, digits or dashes). An
+  unknown typed ID starts a new game under that ID (adopting the progress on screen).
+- **The ID is the key.** Anyone with it can load and continue that game; there are no accounts.
+  The address bar carries `?game=<id>`, so a bookmark returns to the game.
+- **Server:** `GET`/`PUT /api/games/[id]` validate the ID, cap the body at 64 KB, clean the name
+  and only accept a save that passes `deserializeSave`. Storage is a Supabase `games` table via
+  the Data API with the server-only secret key (RLS on, no policies, so the publishable key can't
+  read it). Without `SUPABASE_URL`/`SUPABASE_SECRET_KEY` it uses files in `.data/games/` locally,
+  and on Vercel online saves report unavailable (503) while play continues offline.
+- **Sync:** on entering, the newer of the local and server copies wins; the save is pushed every
+  60 s and when the page is hidden (`keepalive`). If the server was unreachable and there was no
+  local copy, nothing is pushed until the server copy has been checked (never overwrite unseen).
+- **Not yet:** rate limiting on the API.
+
+```sql
+create table if not exists public.games (
+  id text primary key check (id ~ '^[A-Z0-9-]{4,24}$'),
+  name text not null check (char_length(name) between 1 and 24),
+  save text not null check (char_length(save) <= 65536),
+  updated_at timestamptz not null default now()
+);
+alter table public.games enable row level security;
+revoke all on public.games from anon, authenticated;
+grant select, insert, update on public.games to service_role;
+```
+
+## Mobile / compact layout
+
+- **One `compact:` breakpoint** (Tailwind custom variant in `globals.css`): narrow (< 768 px) _or_
+  short (≤ 500 px) screens, so phones in landscape also get the compact HUD. `UpgradeShop` mirrors
+  the same query in JS (`COMPACT`) because it changes behaviour, not just styling.
+- **Compact HUD:** Settings and Reset become 1px-outline pixel-art icon buttons (`PixelIcon`,
+  ASCII-grid icons) with `aria-label`s; the reset confirmation becomes a popover over the icons.
+- **Shop as a docked drawer:** on compact screens the shop is attached to the right screen edge,
+  slides in/out by a vertical "Upgrades" pull tab, starts closed, and is `inert` while hidden.
+  Portrait docks it between the status panel and the bottom controls; landscape docks it below
+  the icon row, full height. Desktop keeps the floating, collapsible panel.
+- **Touch:** `touch-action: manipulation` on the HUD (no double-tap zoom), "Tap" instead of
+  "Click" and no "(Space)" hint on coarse pointers.
+
+## Depot (train sets)
+
+- **Hidden for now.** `DEPOT_ENABLED = false` (in `trainSets.ts`) removes the Depot tab and always
+  runs the heritage set. Everything else (state, saves, models, tests) is kept; flip the flag to
+  bring it back. Saves keep their owned/selected sets while hidden.
+- **Cosmetic only.** Train sets change the look (and exhaust) but not speed or fares, so the Depot
+  is a coin sink that never invalidates the upgrade economy.
+- **Catalogue trimmed to one set.** The City Loop, High Speed 125 and Alpine Panorama sets were
+  removed; only the Highland Express (id `express37`, $50K) remains on sale. Saves that owned a
+  removed set drop it via the sanitizer and fall back to Heritage Steam (no refund).
+- **State:** `trainSet` + `ownedSets` on `GameState`; pure `buyTrainSet` / `selectTrainSet` in
+  `step.ts`. No save-version bump: the loader's defensive merge fills the new fields, and it drops
+  unknown or unowned set ids (falls back to Heritage Steam).
+- **Models:** the Highland Express lives in `expressDiesel.ts` on shared `modernParts.ts`,
+  `bogies.ts` and `cabs.ts`, mapped in `trainSetModels.ts`. Liveries are inspired by real trains
+  but carry no names or logos.
+- **Cab view:** the steam engine has its own footplate (`cabInterior.ts`); the diesel has a cab
+  built by `buildCab()` — an inset, inward-facing copy of the exterior loft with the glazed faces
+  left open, plus a desk with live gauges.
+- **Exhaust:** `trainFx.exhaust` is `steam` or `diesel` (smaller grey puffs).
+- **Lofted, painted bodies (v2).** Modern sets are no longer stacked boxes: each body is one
+  `loft()` — a cross-section profile (tumblehome, curved roof) skinned through stations along x,
+  with scaled stations forming tapered noses and rounded ends. Each flat face is coloured by a
+  livery rule via vertex colours, so stripes, windows and windscreens follow the curvature and stay
+  flush. Lengths are now per vehicle (`length` / `halfBase` on `VehicleModel`): modern locos 7–8,
+  coaches 9–9.6 (≈ 4–5× the width, closer to real proportions); the heritage set is unchanged.
+- **Matching scale.** The Highland Express is modelled at those sizes, then `scaleVehicle()` scales
+  it ×1.15 about the railhead so its roof and nose line up with the heritage cab roof and boiler
+  (it read as smaller). Wheels keep the track gauge and their rolling radius; cab eye, exhaust,
+  length and bogie spacing are scaled to match.
+- **Draw calls:** `Builder.build()` merges every static mesh per material, so the extra detail
+  (bogies, louvres, cab) costs a handful of draw calls per vehicle.

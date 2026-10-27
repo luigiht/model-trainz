@@ -45,3 +45,9 @@ next-env.d.ts
 /playwright-report/
 /tests/e2e/__screenshots__/
 
+# local reference material
+/context/
+
+
+# local game store (dev)
+/.data/

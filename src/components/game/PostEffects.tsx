@@ -19,7 +19,11 @@ export function PostEffects({ effects }: { effects: QualityTier }) {
   return (
     // Remount on SSAO toggle: the composer builds its NormalPass in an effect, so SSAO would
     // otherwise render one commit before the pass exists.
-    <EffectComposer key={effects.ssao ? "ao" : "no-ao"} enableNormalPass={effects.ssao} multisampling={0}>
+    <EffectComposer
+      key={effects.ssao ? "ao" : "no-ao"}
+      enableNormalPass={effects.ssao}
+      multisampling={0}
+    >
       <>
         {effects.ssao && (
           <SSAO

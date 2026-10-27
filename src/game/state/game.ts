@@ -4,14 +4,17 @@
  */
 import { create } from "zustand";
 import type { UpgradeId } from "@/game/content/upgrades";
+import type { TrainSetId } from "@/game/content/trainSets";
 import { deriveStats, type DerivedStats, type UpgradeLevels } from "@/game/economy/economy";
-import { readSave, writeSave, clearSave } from "@/game/save/save";
-import { createInitialState, type TrainPhase } from "@/game/simulation/GameState";
+import { writeSave, clearSave } from "@/game/save/save";
+import { createInitialState, type GameState, type TrainPhase } from "@/game/simulation/GameState";
 import { Route } from "@/game/simulation/route";
 import { PIECE_LENGTH, railheadS, stationS } from "@/game/simulation/rules";
 import {
+  buyTrainSet,
   buyUpgrade,
   clickLayTrack,
+  selectTrainSet,
   simulateAway,
   stepSim,
   type GameEvent,
@@ -53,6 +56,8 @@ export interface HudSnapshot {
   stats: DerivedStats;
   clicks: number;
   distance: number;
+  trainSet: TrainSetId;
+  ownedSets: TrainSetId[];
 }
 
 function snapshot(): HudSnapshot {
@@ -71,6 +76,8 @@ function snapshot(): HudSnapshot {
     stats: deriveStats(s.levels),
     clicks: s.stats.clicks,
     distance: s.stats.distance,
+    trainSet: s.trainSet,
+    ownedSets: [...s.ownedSets],
   };
 }
 
@@ -163,22 +170,38 @@ export function playerBuy(id: UpgradeId): boolean {
   return ok;
 }
 
+/** Depot: buy a train set (it goes straight into service) or switch to one already owned. */
+export function playerDepot(id: TrainSetId): boolean {
+  const ok = game.state.ownedSets.includes(id)
+    ? selectTrainSet(game.state, id)
+    : buyTrainSet(game.state, id);
+  if (ok) {
+    useHud.setState(snapshot());
+    writeSave(game.state);
+  }
+  return ok;
+}
+
 let initialised = false;
-/** Load the save (once) and apply offline progress. */
+/** Wire up saving when the page is hidden or closed (once). */
 export function initGame() {
   if (initialised) return;
   initialised = true;
-  const res = readSave();
-  if (res?.ok) {
-    game.state = res.state;
-    game.route = new Route(res.state.seed);
-    catchUp((Date.now() - res.savedAt) / 1000, true);
-  }
   useHud.setState(snapshot());
   window.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") writeSave(game.state);
   });
   window.addEventListener("pagehide", () => writeSave(game.state));
+}
+
+/** Start playing a loaded save (or a fresh game), applying the progress made since it was saved. */
+export function loadGame(save: { state: GameState; savedAt: number } | null) {
+  game.state = save ? save.state : createInitialState();
+  game.route = new Route(game.state.seed);
+  game.recentLays = [];
+  accumulator = 0;
+  if (save) catchUp((Date.now() - save.savedAt) / 1000, true);
+  useHud.setState(snapshot());
 }
 
 export function resetGame() {

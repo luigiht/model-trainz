@@ -8,8 +8,9 @@ station the train departs, earns fares on arrival, and the player lays the next 
 upgrades (pieces per click, an automatic track gang, speed, fares, carriages, golden spikes).
 The look is **flat-shaded low-poly** (faceted terrain, cone/blob trees, primitive-built train and
 stations) with soft shadows, bloom and a quality-tiered post stack — the original voxel style was
-dropped at the user's request (see `docs/DECISIONS.md`, "Pivot"). Fully client-side Next.js app; no
-backend, no external assets.
+dropped at the user's request (see `docs/DECISIONS.md`, "Pivot"). A Next.js app that runs in the
+browser, plus one small API route (`/api/games/[id]`) that stores saves by Game ID in Supabase;
+no external assets.
 
 The full design brief lives in `docs/BRIEF.md`; the milestone plan in `docs/PLAN.md`; decisions in
 `docs/DECISIONS.md`; architecture in `docs/ARCHITECTURE.md`.

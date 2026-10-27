@@ -14,7 +14,6 @@ import { game } from "@/game/state/game";
 import { railheadS } from "@/game/simulation/rules";
 import type { RoutePoint } from "@/game/simulation/route";
 import { useSettingsStore } from "@/game/state/settingsStore";
-import { CAB_EYE } from "@/render/train/cabInterior";
 import { damp } from "@/lib/math";
 import { trainFx } from "./trainFx";
 
@@ -98,7 +97,7 @@ export function CameraRig({
     const loco = trainFx.loco;
     if (loco) {
       loco.updateMatrixWorld();
-      cabPos.set(...CAB_EYE);
+      cabPos.copy(trainFx.cabEye);
       if (!reducedMotion) {
         const bob = Math.min(1, s.trainV / 5);
         cabPos.y += Math.sin(s.stats.distance * 2.2) * 0.025 * bob + trainFx.jolt * 0.03;

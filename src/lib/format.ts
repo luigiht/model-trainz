@@ -16,3 +16,12 @@ export function formatNumber(n: number, decimals = 2): string {
 }
 
 export const formatCoins = (n: number) => `$${formatNumber(Math.floor(n))}`;
+
+/** Metres below a kilometre ("850 m"), then kilometres ("1.25 Km", "12.5 Km", "125 Km", "1.50K Km"). */
+export function formatDistance(metres: number): string {
+  if (metres < 1000) return `${formatNumber(Math.floor(metres))} m`;
+  const km = metres / 1000;
+  if (km >= 1000) return `${formatNumber(km)} Km`;
+  const decimals = km < 10 ? 2 : km < 100 ? 1 : 0;
+  return `${Number(km.toFixed(decimals))} Km`;
+}

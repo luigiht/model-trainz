@@ -12,6 +12,10 @@ export const trainFx = {
   pressure: 0,
   /** The locomotive's root object, for the cab camera. */
   loco: null as Object3D | null,
+  /** Driver's eye in locomotive-local space (depends on the train set in service). */
+  cabEye: new Vector3(),
+  /** What the locomotive's chimney emits; null for electrics. */
+  exhaust: "steam" as "steam" | "diesel" | null,
   /** Cab-view look offset from straight ahead (radians), driven by drag / arrow keys. */
   cabLook: { yaw: 0, pitch: 0 },
   /** 0 = diorama camera, 1 = cab camera (blended during transitions). */

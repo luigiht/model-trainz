@@ -1,27 +1,68 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function ready(page: Page) {
-  await page.goto("/");
+/** First visit: enter a name (and optionally a Game ID), press Play, wait for the world. */
+async function ready(page: Page, name = "Tester", path = "/") {
+  await page.goto(path);
+  await page.getByTestId("profile-name").fill(name);
+  await page.getByTestId("profile-play").click();
   await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
 }
+
+test("the player's name and a shareable Game ID continue the game elsewhere", async ({
+  page,
+  browser,
+}) => {
+  await ready(page, "Ada");
+  await page.getByTestId("game").click();
+  const dialog = page.getByTestId("game-dialog");
+  await expect(page.getByTestId("game-player")).toHaveText("Ada");
+  const id = (await page.getByTestId("game-id").textContent()) ?? "";
+  expect(id).toMatch(/^[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}$/);
+  await expect(page).toHaveURL(new RegExp(`game=${id}`));
+  await expect(dialog).toContainText("Saved online.");
+  await page.screenshot({ path: "test-results/screenshots/game-panel.png" });
+  await page.keyboard.press("Escape");
+
+  // A fresh browser opening the link is offered that game, with the player's name.
+  const other = await browser.newContext();
+  const page2 = await other.newPage();
+  await page2.goto(`/?game=${id}`);
+  await expect(page2.getByTestId("profile-id")).toHaveValue(id);
+  await expect(page2.getByTestId("profile-name")).toHaveValue("Ada");
+  await page2.getByTestId("profile-play").click();
+  await expect(page2.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await page2.getByTestId("game").click();
+  await expect(page2.getByTestId("game-id")).toHaveText(id);
+  await other.close();
+});
+
+test("returning players skip the name form", async ({ page }) => {
+  await ready(page);
+  await page.reload();
+  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByTestId("profile-name")).toHaveCount(0);
+});
 
 test("game loads and renders a non-blank WebGL canvas", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await ready(page);
   await page.waitForTimeout(2500);
-  const distinctColors = await page.locator("canvas").evaluate((el: HTMLCanvasElement) => {
-    const probe = document.createElement("canvas");
-    probe.width = 64;
-    probe.height = 40;
-    const ctx = probe.getContext("2d")!;
-    ctx.drawImage(el, 0, 0, probe.width, probe.height);
-    const data = ctx.getImageData(0, 0, probe.width, probe.height).data;
-    const seen = new Set<number>();
-    for (let i = 0; i < data.length; i += 4)
-      seen.add((data[i] >> 4) * 256 + (data[i + 1] >> 4) * 16 + (data[i + 2] >> 4));
-    return seen.size;
-  });
+  const distinctColors = await page
+    .getByTestId("scene")
+    .locator("canvas")
+    .evaluate((el: HTMLCanvasElement) => {
+      const probe = document.createElement("canvas");
+      probe.width = 64;
+      probe.height = 40;
+      const ctx = probe.getContext("2d")!;
+      ctx.drawImage(el, 0, 0, probe.width, probe.height);
+      const data = ctx.getImageData(0, 0, probe.width, probe.height).data;
+      const seen = new Set<number>();
+      for (let i = 0; i < data.length; i += 4)
+        seen.add((data[i] >> 4) * 256 + (data[i + 1] >> 4) * 16 + (data[i + 2] >> 4));
+      return seen.size;
+    });
   expect(distinctColors).toBeGreaterThan(20);
   await page.screenshot({ path: "test-results/screenshots/start.png" });
   expect(errors).toEqual([]);

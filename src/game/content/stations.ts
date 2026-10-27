@@ -18,7 +18,7 @@ const NAMES = [
   "Brakeham",
   "Cinderwell",
   "Junction Bay",
-  "Last Stop (Not Really)",
+  "Roundhouse Green",
 ];
 
 /** Station names cycle with a roman-numeral suffix once the list runs out. */

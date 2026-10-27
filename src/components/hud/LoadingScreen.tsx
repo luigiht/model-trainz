@@ -1,43 +1,101 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useEffect, useState } from "react";
+import logo from "@/assets/model-trainz-logo.svg";
+import { useSession } from "@/game/session/session";
 import { Credit } from "./Credit";
+import { ProfileForm } from "./ProfileForm";
+
+const LoadingScene = dynamic(() => import("@/components/game/LoadingScene"), { ssr: false });
 
 const TIPS = [
-  "Tip: hold the mouse button (or Space) to keep shoveling coal.",
-  "Tip: a perfect stop at a station pays a bonus. Brake early, brake gently.",
+  "Tip: click or tap the land to lay track. Hold to keep going.",
   "Tip: press V to hop between the cab and the diorama view.",
+  "Tip: the track gang keeps working while you're away.",
+  "Tip: golden spikes can pay out 20× on a single click.",
   "Tip: press ` to show the debug overlay.",
-  "Tip: cows are not fond of whistles. Use that knowledge wisely.",
 ];
 
-/** Full-screen loader with a little CSS voxel train chugging along. */
-export function LoadingScreen({ visible }: { visible: boolean }) {
+/** How long the fade-out runs before the backdrop scene is unmounted (frees its WebGL context). */
+const FADE_MS = 700;
+
+/** Full-screen loader: the logo over a cab-view ride built from the game's own models. */
+export function LoadingScreen({
+  visible,
+  reducedMotion,
+}: {
+  visible: boolean;
+  reducedMotion: boolean;
+}) {
   const [tip, setTip] = useState(0);
+  const [sceneReady, setSceneReady] = useState(false);
+  const [sceneMounted, setSceneMounted] = useState(true);
+  const phase = useSession((s) => s.phase);
+
   useEffect(() => {
     const id = window.setInterval(() => setTip((t) => (t + 1) % TIPS.length), 3500);
     return () => window.clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (visible) return;
+    const id = window.setTimeout(() => setSceneMounted(false), FADE_MS + 100);
+    return () => window.clearTimeout(id);
+  }, [visible]);
+
   return (
     <div
-      role="status"
-      aria-live="polite"
       aria-hidden={!visible}
-      className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-8 bg-[#1b1712] text-amber-100 transition-opacity duration-700 ${
+      inert={!visible}
+      className={`absolute inset-0 z-40 overflow-hidden bg-[#1b1712] text-amber-100 transition-opacity duration-700 ${
         visible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
-      <h1 className="font-body text-2xl tracking-wide text-amber-300 sm:text-4xl">Model Trainz</h1>
-      <div className="loading-train relative h-16 w-64" aria-hidden>
-        <div className="loading-train__body" />
-        <div className="loading-train__track" />
+      {sceneMounted && (
+        <div
+          aria-hidden
+          className={`absolute inset-0 transition-opacity duration-1000 ${
+            sceneReady ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <LoadingScene reducedMotion={reducedMotion} onReady={() => setSceneReady(true)} />
+        </div>
+      )}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/60 to-transparent"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/75 to-transparent"
+      />
+      <div className="relative flex h-full flex-col items-center justify-between gap-4 px-6 pb-4 pt-[9vh] [@media(max-height:500px)]:pt-3">
+        <h1 className="w-[min(82vw,30rem)] [@media(max-height:500px)]:w-56">
+          <Image
+            src={logo}
+            alt="Model Trainz"
+            priority
+            className="h-auto w-full drop-shadow-[0_4px_0_rgb(0_0_0/0.55)]"
+          />
+        </h1>
+        <div className="flex flex-col items-center gap-3">
+          {phase === "profile" ? (
+            <ProfileForm />
+          ) : (
+            <p
+              role="status"
+              aria-live="polite"
+              className="panel max-w-sm px-4 py-2 text-center text-sm text-amber-50"
+            >
+              <span className="sr-only">Loading. </span>
+              {TIPS[tip]}
+            </p>
+          )}
+          <Credit className="text-center text-amber-100/75" />
+        </div>
       </div>
-      <p className="max-w-sm px-6 text-center text-sm text-amber-100/80">
-        <span className="sr-only">Loading. </span>
-        {TIPS[tip]}
-      </p>
-      <Credit className="absolute inset-x-0 bottom-4 px-6 text-center" />
     </div>
   );
 }

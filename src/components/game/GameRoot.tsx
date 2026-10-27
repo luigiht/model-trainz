@@ -11,7 +11,8 @@ import { UpgradeShop } from "@/components/hud/UpgradeShop";
 import { WelcomeBack } from "@/components/hud/WelcomeBack";
 import { ViewToggle, toggleCameraMode } from "@/components/hud/ViewToggle";
 import { setFloaterLayer, spawnFloater } from "@/components/hud/floaters";
-import { initGame, onGameEvent, playerLayTrack, useHud } from "@/game/state/game";
+import { onGameEvent, playerLayTrack, useHud } from "@/game/state/game";
+import { bootSession, useSession } from "@/game/session/session";
 import { stationName } from "@/game/content/stations";
 import { formatCoins } from "@/lib/format";
 import { sfx } from "@/audio/sfx";
@@ -66,13 +67,16 @@ function layAt(x: number, y: number) {
 
 /** Client root: 3D canvas, HUD, input handling and event → feedback wiring. */
 export function GameRoot() {
-  const [ready, setReady] = useState(false);
-  const onReady = useCallback(() => setReady(true), []);
+  const [worldReady, setWorldReady] = useState(false);
+  const onReady = useCallback(() => setWorldReady(true), []);
+  const ready = useSession((s) => s.phase === "active") && worldReady;
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false);
   const firstTime = useHud((s) => s.clicks === 0);
   const hold = useRef<{ delay?: number; interval?: number }>({});
 
-  useEffect(() => initGame(), []);
+  useEffect(() => {
+    void bootSession();
+  }, []);
 
   // Simulation events → sound, toasts, floaters.
   useEffect(
@@ -123,6 +127,8 @@ export function GameRoot() {
     };
     const onDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // Nothing reaches the game until the player is in (e.g. typing on the name form).
+      if (useSession.getState().phase !== "active") return;
       const lookKey = e.code in LOOK_KEYS || e.code === "KeyC";
       if (e.code !== "Space" && e.code !== "KeyV" && !lookKey) return;
       if (e.repeat && !(e.code in LOOK_KEYS)) return;
@@ -182,7 +188,7 @@ export function GameRoot() {
 
   return (
     <main
-      className="relative h-dvh w-full select-none overflow-hidden bg-[#1b1712]"
+      className="relative h-dvh w-full touch-manipulation select-none overflow-hidden bg-[#1b1712]"
       data-ready={ready}
     >
       <div
@@ -249,27 +255,29 @@ export function GameRoot() {
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3">
-        <div className="flex min-h-0 flex-1 items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            <div className="pointer-events-auto self-start">
-              <StatusPanel />
-            </div>
-            <div className="pt-2">
-              <Toasts />
-            </div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="pointer-events-auto min-w-0 max-w-[22rem] flex-1">
+            <StatusPanel />
           </div>
           <div className="pointer-events-auto">
             <SettingsMenu />
           </div>
         </div>
-        {/* Centred on screen; the height cap keeps it clear of the top and bottom bars. */}
-        <div className="pointer-events-auto absolute right-3 top-1/2 flex max-h-[calc(100dvh-9rem)] -translate-y-1/2">
-          <UpgradeShop />
+        {/* Compact portrait docks the shop drawer to this region (between the top and bottom bars). */}
+        <div className="min-h-0 flex-1 pt-2 compact:portrait:relative">
+          <Toasts />
+          {/* Desktop: centred on screen, the height cap keeps it clear of the top and bottom bars.
+              Compact landscape: docked to the right edge below the icon buttons. */}
+          <div className="pointer-events-auto absolute right-3 top-1/2 flex max-h-[calc(100dvh-9rem)] -translate-y-1/2 compact:z-10 compact:max-h-none compact:translate-y-0 compact:portrait:inset-y-0 compact:portrait:-right-3 compact:landscape:top-[4.25rem] compact:landscape:bottom-3 compact:landscape:right-0">
+            <UpgradeShop />
+          </div>
         </div>
         <div className="relative flex flex-col items-center gap-2">
           {firstTime && ready && (
             <p className="hint panel px-4 py-2 text-center text-sm text-amber-100">
-              Click the station (or anywhere on the land) to lay track. Hold to keep going!
+              <span className="pointer-coarse:hidden">Click</span>
+              <span className="hidden pointer-coarse:inline">Tap</span> the station (or anywhere on
+              the land) to lay track. Hold to keep going!
             </p>
           )}
           <button
@@ -290,7 +298,7 @@ export function GameRoot() {
               }
             }}
           >
-            Lay track <span className="opacity-70">(Space)</span>
+            Lay track <span className="opacity-70 pointer-coarse:hidden">(Space)</span>
           </button>
           <div className="pointer-events-auto sm:absolute sm:bottom-1 sm:left-0">
             <ViewToggle />
@@ -305,7 +313,7 @@ export function GameRoot() {
       />
       <WelcomeBack />
       <DebugOverlay />
-      <LoadingScreen visible={!ready} />
+      <LoadingScreen visible={!ready} reducedMotion={reducedMotion} />
     </main>
   );
 }

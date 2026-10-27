@@ -1,6 +1,7 @@
 /** The simulation: pure functions that mutate a GameState and report events. */
 import { GOLDEN_MULTIPLIER, deriveStats, upgradeCost, isMaxed } from "@/game/economy/economy";
 import type { UpgradeId } from "@/game/content/upgrades";
+import { TRAIN_SET_BY_ID, type TrainSetId } from "@/game/content/trainSets";
 import type { GameState } from "./GameState";
 import { DWELL_SECONDS, TRAIN_ACCEL, legFare, railheadS, stationS } from "./rules";
 
@@ -52,6 +53,23 @@ export function buyUpgrade(state: GameState, id: UpgradeId): boolean {
   if (!canBuy(state, id)) return false;
   state.coins -= upgradeCost(id, state.levels[id]);
   state.levels[id]++;
+  return true;
+}
+
+/** Depot purchase: pays the set's price and puts it into service. */
+export function buyTrainSet(state: GameState, id: TrainSetId): boolean {
+  const set = TRAIN_SET_BY_ID[id];
+  if (!set || state.ownedSets.includes(id) || state.coins < set.price) return false;
+  state.coins -= set.price;
+  state.ownedSets.push(id);
+  state.trainSet = id;
+  return true;
+}
+
+/** Swap to a set that's already been bought. */
+export function selectTrainSet(state: GameState, id: TrainSetId): boolean {
+  if (!state.ownedSets.includes(id) || state.trainSet === id) return false;
+  state.trainSet = id;
   return true;
 }
 

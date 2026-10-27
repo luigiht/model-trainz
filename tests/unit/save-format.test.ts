@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { deserializeSave, serializeSave, SAVE_VERSION } from "@/game/save/save";
 import { createInitialState } from "@/game/simulation/GameState";
-import { formatNumber, formatCoins } from "@/lib/format";
+import { formatDistance, formatNumber, formatCoins } from "@/lib/format";
 import { stationName } from "@/game/content/stations";
 
 describe("save format", () => {
@@ -56,6 +56,17 @@ describe("formatting", () => {
     expect(formatNumber(1e40)).toMatch(/e40$/);
     expect(formatCoins(12.9)).toBe("$12");
   });
+
+  it("formats distance in m, then Km", () => {
+    expect(formatDistance(0)).toBe("0 m");
+    expect(formatDistance(999.9)).toBe("999 m");
+    expect(formatDistance(1000)).toBe("1 Km");
+    expect(formatDistance(1254)).toBe("1.25 Km");
+    expect(formatDistance(12_540)).toBe("12.5 Km");
+    expect(formatDistance(125_400)).toBe("125 Km");
+    expect(formatDistance(1_500_000)).toBe("1.50K Km");
+  });
+
   it("names stations, cycling with numerals", () => {
     expect(stationName(0)).toBe("Millbrook");
     expect(stationName(20)).toBe("Millbrook II");

@@ -1,4 +1,5 @@
 import { emptyLevels, type UpgradeLevels } from "@/game/economy/economy";
+import { DEFAULT_TRAIN_SET, type TrainSetId } from "@/game/content/trainSets";
 import { DWELL_SECONDS, INITIAL_PIECES, START_S } from "./rules";
 
 export type TrainPhase = "docked" | "traveling";
@@ -29,6 +30,9 @@ export interface GameState {
   dwell: number;
   levels: UpgradeLevels;
   stats: GameStats;
+  /** Train set in service, and every set bought at the Depot. */
+  trainSet: TrainSetId;
+  ownedSets: TrainSetId[];
 }
 
 export function createInitialState(seed = 20261026): GameState {
@@ -45,5 +49,7 @@ export function createInitialState(seed = 20261026): GameState {
     dwell: DWELL_SECONDS,
     levels: emptyLevels(),
     stats: { clicks: 0, piecesLaid: 0, stationsVisited: 0, distance: 0, goldenSpikes: 0 },
+    trainSet: DEFAULT_TRAIN_SET,
+    ownedSets: [DEFAULT_TRAIN_SET],
   };
 }

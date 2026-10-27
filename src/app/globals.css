@@ -13,6 +13,13 @@
   --text-sm: max(12px, 0.875rem);
 }
 
+/* Phones and small windows (narrow or short). Keep in sync with COMPACT in UpgradeShop.tsx. */
+@custom-variant compact {
+  @media (max-width: 767px) or (max-height: 500px) {
+    @slot;
+  }
+}
+
 :root {
   --iron: #24201b;
   --brass: #c9a24a;
@@ -45,51 +52,7 @@ body {
   border-radius: 8px;
 }
 
-/* Loading-screen voxel train. */
-.loading-train__body {
-  position: absolute;
-  bottom: 14px;
-  left: 0;
-  width: 56px;
-  height: 28px;
-  background: #2f5d3a;
-  box-shadow:
-    -8px 8px 0 #1f2a24,
-    40px -12px 0 -6px #111,
-    56px 4px 0 -8px #ffd27a;
-  animation: loading-chug 3.2s linear infinite;
-}
-.loading-train__track {
-  position: absolute;
-  bottom: 6px;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: repeating-linear-gradient(90deg, #6b4a2b 0 6px, transparent 6px 12px);
-}
-@keyframes loading-chug {
-  0% {
-    transform: translateX(-20px) translateY(0);
-  }
-  25% {
-    transform: translateX(50px) translateY(-1px);
-  }
-  50% {
-    transform: translateX(110px) translateY(0);
-  }
-  75% {
-    transform: translateX(170px) translateY(-1px);
-  }
-  100% {
-    transform: translateX(230px) translateY(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .loading-train__body {
-    animation: none;
-    transform: translateX(100px);
-  }
   *,
   *::before,
   *::after {

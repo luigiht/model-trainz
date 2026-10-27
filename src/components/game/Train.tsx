@@ -1,67 +1,50 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { buildCabInterior } from "@/render/train/cabInterior";
+import { CAB_EYE, buildCabInterior } from "@/render/train/cabInterior";
 import { deriveStats } from "@/game/economy/economy";
 import { useFrame } from "@react-three/fiber";
-import { Group, Matrix4, Quaternion, Vector3 } from "three";
 import { game, useHud } from "@/game/state/game";
-import type { RoutePoint } from "@/game/simulation/route";
 import {
   CARRIAGE_LENGTH,
   COUPLING_GAP,
   LOCO_LENGTH,
-  buildCarriage,
-  buildLocomotive,
   type VehicleModel,
 } from "@/render/train/trainModels";
+import { placeOnRoute } from "@/render/train/placement";
+import { TRAIN_SET_MODELS } from "@/render/train/trainSetModels";
+import { DEFAULT_TRAIN_SET, DEPOT_ENABLED } from "@/game/content/trainSets";
 import { trainFx } from "./trainFx";
 
-const front: RoutePoint = { x: 0, y: 0, z: 0, dx: 1, dy: 0, dz: 0 };
-const back: RoutePoint = { x: 0, y: 0, z: 0, dx: 1, dy: 0, dz: 0 };
-const fwd = new Vector3();
-const side = new Vector3();
-const up = new Vector3();
-const basis = new Matrix4();
-const WORLD_UP = new Vector3(0, 1, 0);
-const q = new Quaternion();
 let lastSpeed = 0;
 let lanternVel = 0;
 
-/** Places a vehicle between two bogie points sampled on the route (articulates on curves). */
-function placeVehicle(group: Group, centerS: number, halfBase: number, sway: number) {
-  game.route.pointAt(centerS + halfBase, front);
-  game.route.pointAt(centerS - halfBase, back);
-  fwd.set(front.x - back.x, front.y - back.y, front.z - back.z).normalize();
-  side.crossVectors(fwd, WORLD_UP).normalize();
-  up.crossVectors(side, fwd).normalize();
-  basis.makeBasis(fwd, up, side);
-  q.setFromRotationMatrix(basis);
-  group.position.set((front.x + back.x) / 2, (front.y + back.y) / 2, (front.z + back.z) / 2);
-  group.quaternion.copy(q);
-  group.rotateX(sway);
-}
-
 export function Train() {
   const carriages = useHud((s) => s.stats.carriages);
-  const loco = useMemo(() => buildLocomotive(), []);
+  const trainSet = useHud((s) => (DEPOT_ENABLED ? s.trainSet : DEFAULT_TRAIN_SET));
+  const models = TRAIN_SET_MODELS[trainSet];
+  const loco = useMemo(() => models.loco(), [models]);
   const cars = useMemo<VehicleModel[]>(
-    () => Array.from({ length: carriages }, (_, i) => buildCarriage(i)),
-    [carriages],
+    () => Array.from({ length: carriages }, (_, i) => models.coach(i)),
+    [models, carriages],
   );
+  // Only the heritage engine has a modelled footplate; the others look out of their windscreen.
+  const steamCab = !loco.cabEye;
 
   const cab = useMemo(() => buildCabInterior(), []);
 
   useEffect(() => {
-    loco.group.add(cab.group);
+    if (steamCab) loco.group.add(cab.group);
     trainFx.loco = loco.group;
+    trainFx.cabEye.set(...(loco.cabEye ?? CAB_EYE));
+    trainFx.exhaust = loco.exhaust ?? null;
     return () => {
       loco.group.remove(cab.group);
       trainFx.loco = null;
       loco.dispose();
-      cab.dispose();
     };
-  }, [loco, cab]);
+  }, [loco, cab, steamCab]);
+  useEffect(() => () => cab.dispose(), [cab]);
   useEffect(() => () => cars.forEach((c) => c.dispose()), [cars]);
 
   useFrame(({ clock }, dt) => {
@@ -72,21 +55,28 @@ export function Train() {
     const sway = Math.sin(t * 7.3) * 0.004 * Math.min(1, speed / 4) + trainFx.jolt * 0.02;
     trainFx.jolt *= Math.exp(-dt * 10);
 
-    const locoCenter = state.trainS - LOCO_LENGTH / 2;
-    placeVehicle(loco.group, locoCenter, 1.6, sway);
-    let s = state.trainS - LOCO_LENGTH - COUPLING_GAP;
+    const locoLength = loco.length ?? LOCO_LENGTH;
+    placeOnRoute(game.route, loco.group, state.trainS - locoLength / 2, loco.halfBase ?? 1.6, sway);
+    let s = state.trainS - locoLength - COUPLING_GAP;
     cars.forEach((car, i) => {
-      placeVehicle(
+      const length = car.length ?? CARRIAGE_LENGTH;
+      placeOnRoute(
+        game.route,
         car.group,
-        s - CARRIAGE_LENGTH / 2,
-        1.4,
+        s - length / 2,
+        car.halfBase ?? 1.4,
         Math.sin(t * 6.1 + i) * 0.004 * Math.min(1, speed / 4),
       );
-      s -= CARRIAGE_LENGTH + COUPLING_GAP;
+      s -= length + COUPLING_GAP;
     });
 
     // Cab interior: only drawn when the cab camera is (partly) active.
-    cab.group.visible = trainFx.cabBlend > 0.01;
+    const inCab = trainFx.cabBlend > 0.01;
+    if (loco.cab) {
+      loco.cab.group.visible = inCab;
+      if (inCab) loco.cab.update(speed / deriveStats(state.levels).maxSpeed, t);
+    }
+    cab.group.visible = steamCab && inCab;
     if (cab.group.visible) {
       const maxSpeed = deriveStats(state.levels).maxSpeed;
       trainFx.pressure = Math.max(0.15, trainFx.pressure - dt * 0.08);
@@ -118,9 +108,9 @@ export function Train() {
 
   return (
     <group>
-      <primitive object={loco.group} />
+      <primitive key={trainSet} object={loco.group} />
       {cars.map((c, i) => (
-        <primitive key={i} object={c.group} />
+        <primitive key={`${trainSet}-${i}`} object={c.group} />
       ))}
     </group>
   );

@@ -26,13 +26,23 @@ countryside, so it's up to you to build the line.
   | Extra Carriage | +1 carriage on the train, +50% fares |
   | Golden Spikes  | +2% chance that a click pays out 20× |
 
+<!-- Depot is hidden for now (DEPOT_ENABLED in src/game/content/trainSets.ts).
+- **Visit the Depot.** The **Depot** tab next to Upgrades sells new train sets. They're purely
+  cosmetic; once bought you can switch between them for free.
+
+  | Train set        | Price | Locomotive + coaches             |
+  | ---------------- | ----- | -------------------------------- |
+  | Heritage Steam   | Free  | Steam tank engine + teak coaches |
+  | Highland Express | $50K  | Type 3 diesel + express coaches  |
+-->
+
 - **Keep going while away.** The track gang keeps working when the tab is closed; a welcome-back
   summary shows what they earned.
 - **Pick a view.** Press **V** (or use the toggle bottom left) to switch between the overhead
   **Diorama** and the first-person **Cab**. Scroll to zoom the diorama; in the cab, drag or use the
   arrow keys to look around and **C** to re-centre.
-- **Settings** (top right) cover sound, volume, graphics quality (Auto, Low, Medium, High, Ultra),
-  camera view and the full list of controls.
+- **Settings** (top right) cover sound, volume, graphics quality (Auto, Low, Medium, High, Ultra)
+  and the full list of controls.
 
 Progress is saved automatically in your browser.
 
@@ -90,3 +100,6 @@ Stop `pnpm dev` before running `pnpm build`; both write to `.next/`.
    version.
 4. If you use a custom domain, also set `NEXT_PUBLIC_SITE_URL` (for example
    `https://modeltrainz.example`) so social preview images link to it.
+5. For online saves (Game IDs that work on any device), set `SUPABASE_URL` and
+   `SUPABASE_SECRET_KEY` from a Supabase project with a `games` table (see
+   `docs/DECISIONS.md`, "Players and Game IDs"). Without them, saves stay in the browser.
