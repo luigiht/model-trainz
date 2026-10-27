@@ -23,12 +23,11 @@ import {
 export const SIM_HZ = 30;
 const SIM_DT = 1 / SIM_HZ;
 const MAX_CPS = 12;
-const OFFLINE_CAP_SECONDS = 8 * 3600;
+/** A hidden (but still open) tab catches up on return, up to this long. */
+const CATCH_UP_CAP_SECONDS = 8 * 3600;
 /** Gaps longer than this (tab hidden, laptop asleep) go through the coarse catch-up. */
 const CATCH_UP_THRESHOLD = 2;
 const AUTOSAVE_MS = 10_000;
-/** Only greet the player with a summary after a real break. */
-const WELCOME_BACK_MIN_SECONDS = 60;
 
 export const game = {
   state: createInitialState(),
@@ -83,18 +82,6 @@ function snapshot(): HudSnapshot {
 
 export const useHud = create<HudSnapshot>()(() => snapshot());
 
-export interface AwaySummary {
-  seconds: number;
-  coins: number;
-  pieces: number;
-  stations: number;
-}
-
-export const useAway = create<{ summary: AwaySummary | null; dismiss: () => void }>()((set) => ({
-  summary: null,
-  dismiss: () => set({ summary: null }),
-}));
-
 const events: GameEvent[] = [];
 function flush() {
   for (const e of events) {
@@ -114,11 +101,19 @@ function flush() {
 let accumulator = 0;
 let lastHud = 0;
 let lastSave = 0;
+let running = false;
+
+/** The simulation only advances while the player is in a game, not on the start screen. */
+export function setRunning(on: boolean) {
+  running = on;
+  accumulator = 0;
+}
 
 /** Called every rendered frame with the real elapsed time. */
 export function tickGame(dt: number) {
+  if (!running) return;
   if (dt > CATCH_UP_THRESHOLD) {
-    catchUp(dt, false);
+    catchUp(dt);
     return;
   }
   accumulator += dt;
@@ -138,12 +133,9 @@ export function tickGame(dt: number) {
   }
 }
 
-function catchUp(seconds: number, showDialog: boolean) {
-  const capped = Math.min(seconds, OFFLINE_CAP_SECONDS);
-  const res = simulateAway(game.state, capped);
+function catchUp(seconds: number) {
+  simulateAway(game.state, Math.min(seconds, CATCH_UP_CAP_SECONDS));
   useHud.setState(snapshot());
-  if (showDialog && capped >= WELCOME_BACK_MIN_SECONDS && (res.coins > 0 || res.pieces > 0))
-    useAway.setState({ summary: { seconds: capped, ...res } });
 }
 
 const clickTimes: number[] = [];
@@ -194,13 +186,12 @@ export function initGame() {
   window.addEventListener("pagehide", () => writeSave(game.state));
 }
 
-/** Start playing a loaded save (or a fresh game), applying the progress made since it was saved. */
-export function loadGame(save: { state: GameState; savedAt: number } | null) {
+/** Show a loaded save (or a fresh game) exactly as it was saved: nothing happens while closed. */
+export function loadGame(save: { state: GameState } | null) {
   game.state = save ? save.state : createInitialState();
   game.route = new Route(game.state.seed);
   game.recentLays = [];
   accumulator = 0;
-  if (save) catchUp((Date.now() - save.savedAt) / 1000, true);
   useHud.setState(snapshot());
 }
 

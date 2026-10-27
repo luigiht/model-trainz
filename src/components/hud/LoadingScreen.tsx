@@ -7,13 +7,14 @@ import logo from "@/assets/model-trainz-logo.svg";
 import { useSession } from "@/game/session/session";
 import { Credit } from "./Credit";
 import { ProfileForm } from "./ProfileForm";
+import { ResumeCard } from "./ResumeCard";
 
 const LoadingScene = dynamic(() => import("@/components/game/LoadingScene"), { ssr: false });
 
 const TIPS = [
   "Tip: click or tap the land to lay track. Hold to keep going.",
   "Tip: press V to hop between the cab and the diorama view.",
-  "Tip: the track gang keeps working while you're away.",
+  "Tip: the track gang lays track for you while you play.",
   "Tip: golden spikes can pay out 20× on a single click.",
   "Tip: press ` to show the debug overlay.",
 ];
@@ -83,6 +84,8 @@ export function LoadingScreen({
         <div className="flex flex-col items-center gap-3">
           {phase === "profile" ? (
             <ProfileForm />
+          ) : phase === "resume" ? (
+            <ResumeCard />
           ) : (
             <p
               role="status"

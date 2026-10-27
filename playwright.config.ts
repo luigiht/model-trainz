@@ -25,5 +25,6 @@ export default defineConfig({
     port: PORT,
     timeout: 240_000,
     reuseExistingServer: !process.env.CI,
+    env: { GAME_STORE: "local" },
   },
 });

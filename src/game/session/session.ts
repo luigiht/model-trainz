@@ -4,21 +4,24 @@
  */
 import { create } from "zustand";
 import { deserializeSave, readSave, serializeSave, setSaveSlot, writeSave } from "@/game/save/save";
-import { game, initGame, loadGame } from "@/game/state/game";
+import { game, initGame, loadGame, setRunning } from "@/game/state/game";
 import { cleanPlayerName, generateGameId, normalizeGameId } from "@/lib/gameId";
+import { VERSION_PARAM, reloadIfOutdated } from "./version";
 
 const PROFILE_KEY = "mt-profile";
 const SYNC_MS = 60_000;
-const FETCH_TIMEOUT_MS = 5000;
+const FETCH_TIMEOUT_MS = 8000;
 
 export type SyncStatus = "idle" | "saving" | "saved" | "offline";
 
 interface SessionState {
-  /** booting → profile (first visit only) → active. */
-  phase: "booting" | "profile" | "active";
+  /** booting → resume (returning player) or profile (name form) → active. */
+  phase: "booting" | "resume" | "profile" | "active";
   name: string;
   gameId: string;
-  /** First-visit form prefills, from a shared `?game=` link. */
+  /** This browser remembers a game the player can go back to from the form. */
+  resumable: boolean;
+  /** Name form prefills (from a shared `?game=` link or the remembered player). */
   suggestedId: string;
   suggestedName: string;
   sync: SyncStatus;
@@ -29,6 +32,7 @@ export const useSession = create<SessionState>()(() => ({
   phase: "booting",
   name: "",
   gameId: "",
+  resumable: false,
   suggestedId: "",
   suggestedName: "",
   sync: "idle",
@@ -62,20 +66,23 @@ function writeProfile(p: Profile) {
 const gameUrl = (id: string) => `/api/games/${encodeURIComponent(id)}`;
 
 /** The server's copy of a game: null if there is none, "offline" if the server can't be reached. */
-async function fetchGame(id: string): Promise<{ name: string; save: string } | null | "offline"> {
+async function fetchGame(
+  id: string,
+  attempts = 1,
+): Promise<{ name: string; save: string } | null | "offline"> {
   try {
     const res = await fetch(gameUrl(id), {
       cache: "no-store",
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (res.status === 404) return null;
-    if (!res.ok) return "offline";
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const body = (await res.json()) as { name?: unknown; save?: unknown };
     return typeof body.name === "string" && typeof body.save === "string"
       ? { name: body.name, save: body.save }
       : "offline";
   } catch {
-    return "offline";
+    return attempts > 1 ? fetchGame(id, attempts - 1) : "offline";
   }
 }
 
@@ -92,7 +99,7 @@ async function enterGame(
   id: string,
   opts: { keepCurrent: boolean; requireServer: boolean },
 ): Promise<boolean> {
-  const remote = await fetchGame(id);
+  const remote = await fetchGame(id, opts.requireServer ? 2 : 1);
   if (remote === "offline" && opts.requireServer) return false;
   setSaveSlot(id);
   const local = readSave();
@@ -109,27 +116,48 @@ async function enterGame(
   url.searchParams.set("game", id);
   window.history.replaceState(null, "", url);
   useSession.setState({ phase: "active", name, gameId: id });
+  setRunning(true);
   startSync();
   void syncNow();
   return true;
 }
 
+/** First visit only: a new game keeps the progress on screen (saved before Game IDs existed). */
+let adoptOnScreen = false;
+
 let booted = false;
-/** Called once on startup: returning players go straight in, first-timers get the name form. */
+/** Called once on startup: returning players are offered their game, first-timers the name form. */
 export async function bootSession() {
   if (booted) return;
   booted = true;
+  const url = new URL(window.location.href);
+  if (url.searchParams.has(VERSION_PARAM)) {
+    url.searchParams.delete(VERSION_PARAM);
+    window.history.replaceState(null, "", url);
+  }
   initGame();
   const profile = readProfile();
   const linked = normalizeGameId(new URLSearchParams(window.location.search).get("game") ?? "");
   if (profile) {
-    await enterGame(profile.name, linked ?? profile.gameId, {
-      keepCurrent: false,
-      requireServer: false,
-    });
+    useSession.setState({ name: profile.name, gameId: profile.gameId, resumable: true });
+    if (!linked || linked === profile.gameId) {
+      // The world loads behind the Continue card with this browser's copy of the game.
+      setSaveSlot(profile.gameId);
+      const local = readSave();
+      loadGame(local?.ok ? local : null);
+      useSession.setState({ phase: "resume" });
+      return;
+    }
+    useSession.setState({ phase: "profile", suggestedId: linked, suggestedName: profile.name });
     return;
   }
+  // No name yet: make sure this is the latest build before asking for one.
+  if (await reloadIfOutdated()) return;
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted && !readProfile()) void reloadIfOutdated();
+  });
   // First visit: the world loads behind the form with whatever this browser had saved before.
+  adoptOnScreen = true;
   const before = readSave();
   loadGame(before?.ok ? before : null);
   useSession.setState({ phase: "profile", suggestedId: linked ?? "" });
@@ -139,18 +167,35 @@ export async function bootSession() {
   }
 }
 
-/** First-visit form. Returns an error message to show, or null once the game has started. */
+/** Continue card: carry on with the remembered game. */
+export async function resumeGame() {
+  const { name, gameId } = useSession.getState();
+  await enterGame(name, gameId, { keepCurrent: false, requireServer: false });
+}
+
+/** Continue card: start a new game or enter another Game ID instead. */
+export function chooseAnotherGame() {
+  const { name } = useSession.getState();
+  useSession.setState({ phase: "profile", suggestedName: name, suggestedId: "" });
+}
+
+/** Name form: back to the Continue card. */
+export function backToResume() {
+  useSession.setState({ phase: "resume" });
+}
+
+/** Name form. Returns an error message to show, or null once the game has started. */
 export async function submitProfile(nameInput: string, idInput: string): Promise<string | null> {
   const name = cleanPlayerName(nameInput);
   if (!name) return "Please enter your name.";
   if (!idInput.trim()) {
     const id = generateGameId((n) => crypto.getRandomValues(new Uint8Array(n)));
-    await enterGame(name, id, { keepCurrent: true, requireServer: false });
+    await enterGame(name, id, { keepCurrent: adoptOnScreen, requireServer: false });
     return null;
   }
   const id = normalizeGameId(idInput);
   if (!id) return "That isn't a Game ID: use 4–24 letters, numbers or dashes.";
-  const ok = await enterGame(name, id, { keepCurrent: true, requireServer: true });
+  const ok = await enterGame(name, id, { keepCurrent: adoptOnScreen, requireServer: true });
   return ok
     ? null
     : "Couldn't reach the game server to look up that ID. Try again, or leave it empty to start a new game.";

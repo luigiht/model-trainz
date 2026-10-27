@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { submitProfile, useSession } from "@/game/session/session";
+import { backToResume, submitProfile, useSession } from "@/game/session/session";
 import { PLAYER_NAME_MAX } from "@/lib/gameId";
 
 const FIELD =
@@ -11,6 +11,7 @@ const FIELD =
 export function ProfileForm() {
   const suggestedId = useSession((s) => s.suggestedId);
   const suggestedName = useSession((s) => s.suggestedName);
+  const resumable = useSession((s) => s.resumable);
   const [name, setName] = useState<string | null>(null);
   const [id, setId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +79,15 @@ export function ProfileForm() {
       >
         {busy ? "Starting…" : "Play"}
       </button>
+      {resumable && (
+        <button
+          type="button"
+          onClick={backToResume}
+          className="self-center rounded text-xs text-amber-100/70 underline underline-offset-2 hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-amber-300"
+        >
+          Back to my previous game
+        </button>
+      )}
     </form>
   );
 }

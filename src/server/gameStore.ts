@@ -18,6 +18,8 @@ export class StoreUnavailableError extends Error {}
 const SAFE_ID = /^[A-Z0-9-]{4,24}$/;
 
 function supabaseConfig() {
+  // GAME_STORE=local forces the file store (the e2e server uses it to keep test games out).
+  if (process.env.GAME_STORE === "local") return null;
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SECRET_KEY;
   return url && key ? { url: url.replace(/\/+$/, ""), key } : null;

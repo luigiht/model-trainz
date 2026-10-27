@@ -8,6 +8,13 @@ async function ready(page: Page, name = "Tester", path = "/") {
   await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
 }
 
+/** Reload as a returning player: the Continue card picks the game back up. */
+async function resume(page: Page) {
+  await page.reload();
+  await page.getByTestId("resume-continue").click();
+  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+}
+
 test("the player's name and a shareable Game ID continue the game elsewhere", async ({
   page,
   browser,
@@ -36,11 +43,30 @@ test("the player's name and a shareable Game ID continue the game elsewhere", as
   await other.close();
 });
 
-test("returning players skip the name form", async ({ page }) => {
-  await ready(page);
+test("players without a name are hard-refreshed onto a newer build (once)", async ({ page }) => {
+  await page.route("**/api/version", (r) => r.fulfill({ json: { version: "newer-build" } }));
+  const reload = page.waitForRequest((req) => req.url().includes("v=newer-build"));
+  await page.goto("/");
+  await reload;
+  await expect(page.getByTestId("profile-name")).toBeVisible();
+  await expect(page).not.toHaveURL(/v=newer-build/);
+});
+
+test("returning players are invited to continue their game, or start another", async ({ page }) => {
+  await ready(page, "Ada");
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("coins")).toHaveText("$1");
   await page.reload();
-  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByText("Welcome back, Ada!")).toBeVisible();
   await expect(page.getByTestId("profile-name")).toHaveCount(0);
+  await page.screenshot({ path: "test-results/screenshots/continue.png" });
+  // The other choice shows the name form, with a way back.
+  await page.getByTestId("resume-other").click();
+  await expect(page.getByTestId("profile-name")).toHaveValue("Ada");
+  await page.getByRole("button", { name: "Back to my previous game" }).click();
+  await page.getByTestId("resume-continue").click();
+  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByTestId("coins")).toHaveText("$1");
 });
 
 test("game loads and renders a non-blank WebGL canvas", async ({ page }) => {
@@ -100,8 +126,7 @@ test("buying an upgrade works and progress persists across reloads", async ({ pa
   // Two pieces per click now → the click pays $2 (shown as a floating number).
   await page.keyboard.press("Space");
   await expect(page.locator(".floater", { hasText: "+$2" }).first()).toBeAttached();
-  await page.reload();
-  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await resume(page);
   await expect(page.getByTestId("coins")).not.toHaveText("$0");
   await expect(buy).toContainText("Bigger Shovels");
   await expect(page.locator("[data-testid='buy-shovel'] span[aria-hidden]")).toHaveText("1");
@@ -125,8 +150,7 @@ test("debug overlay toggles; settings panel changes quality + volume and they pe
   await page.screenshot({ path: "test-results/screenshots/settings.png" });
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
-  await page.reload();
-  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await resume(page);
   await page.getByTestId("settings").click();
   await expect(page.getByTestId("quality-low")).toHaveAttribute("aria-checked", "true");
   await expect(page.getByTestId("settings-volume")).toHaveValue("40");
@@ -160,8 +184,7 @@ test("cab view: toggle, drag to look (no track), tap to lay, V key, persists", a
   }
   await page.waitForTimeout(2500);
   await page.screenshot({ path: "test-results/screenshots/cab-moving.png" });
-  await page.reload();
-  await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+  await resume(page);
   await expect(page.getByTestId("view-cab")).toHaveAttribute("aria-pressed", "true");
   await page.keyboard.press("v");
   await expect(page.getByTestId("view-diorama")).toHaveAttribute("aria-pressed", "true");

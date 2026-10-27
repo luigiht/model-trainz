@@ -8,7 +8,6 @@ import { SettingsMenu } from "@/components/hud/SettingsMenu";
 import { StatusPanel } from "@/components/hud/StatusPanel";
 import { Toasts, toast } from "@/components/hud/Toasts";
 import { UpgradeShop } from "@/components/hud/UpgradeShop";
-import { WelcomeBack } from "@/components/hud/WelcomeBack";
 import { ViewToggle, toggleCameraMode } from "@/components/hud/ViewToggle";
 import { setFloaterLayer, spawnFloater } from "@/components/hud/floaters";
 import { onGameEvent, playerLayTrack, useHud } from "@/game/state/game";
@@ -132,7 +131,7 @@ export function GameRoot() {
       const lookKey = e.code in LOOK_KEYS || e.code === "KeyC";
       if (e.code !== "Space" && e.code !== "KeyV" && !lookKey) return;
       if (e.repeat && !(e.code in LOOK_KEYS)) return;
-      // Don't act behind an open dialog (settings, welcome back).
+      // Don't act behind an open dialog (settings, game).
       if (document.querySelector("dialog[open]")) return;
       const t = e.target as HTMLElement | null;
       if (t && ["INPUT", "SELECT", "TEXTAREA"].includes(t.tagName)) return;
@@ -311,7 +310,6 @@ export function GameRoot() {
         className="pointer-events-none absolute inset-0 z-20 overflow-hidden"
         aria-hidden
       />
-      <WelcomeBack />
       <DebugOverlay />
       <LoadingScreen visible={!ready} reducedMotion={reducedMotion} />
     </main>

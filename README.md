@@ -36,8 +36,9 @@ countryside, so it's up to you to build the line.
   | Highland Express | $50K  | Type 3 diesel + express coaches  |
 -->
 
-- **Keep going while away.** The track gang keeps working when the tab is closed; a welcome-back
-  summary shows what they earned.
+- **Pick up where you left off.** Your game pauses when you close the tab. Next time, the start
+  screen welcomes you back with a **Continue** button; use your Game ID (in the **Game** panel) to
+  carry on from another device.
 - **Pick a view.** Press **V** (or use the toggle bottom left) to switch between the overhead
   **Diorama** and the first-person **Cab**. Scroll to zoom the diorama; in the cab, drag or use the
   arrow keys to look around and **C** to re-centre.

@@ -122,8 +122,17 @@ Newest at the bottom. Each entry: decision — why.
 ## Players and Game IDs
 
 - **First visit asks for a name** (and an optional Game ID to continue an existing game) on the
-  loading screen; later visits go straight in. The profile `{ name, gameId }` lives in
+  loading screen. Returning players get a **Continue** card instead (with a way to start a new
+  game or enter another ID). The profile `{ name, gameId }` lives in
   localStorage (`mt-profile`); each game has its own local save slot (`mt-save:<id>`).
+- **No progress while closed.** Offline catch-up and the welcome-back summary were removed: a
+  save loads exactly as it was saved, and the simulation is paused until the player presses
+  Play/Continue. A hidden-but-open tab still catches up when it becomes visible again.
+- **Latest build before naming.** Each build is stamped with `NEXT_PUBLIC_APP_VERSION` (Vercel
+  deployment ID / commit, `next.config.ts`); `/api/version` reports the deployed one. A visitor
+  without a name whose tab is older hard-refreshes (cache-busting `?v=`, once per build) before
+  the name form appears; also on back/forward-cache restores. Tabs opened before this check
+  existed can't be reached, but their next load gets the new build.
 - **Game IDs** are 60-bit random Crockford-base32 strings (`7K2M-9QXP-4HCW`), so they can't be
   guessed. Typed IDs are normalised (upper case, no spaces; 4–24 letters, digits or dashes). An
   unknown typed ID starts a new game under that ID (adopting the progress on screen).

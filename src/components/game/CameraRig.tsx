@@ -15,13 +15,17 @@ import { railheadS } from "@/game/simulation/rules";
 import type { RoutePoint } from "@/game/simulation/route";
 import { useSettingsStore } from "@/game/state/settingsStore";
 import { damp } from "@/lib/math";
+import { LOCO_LENGTH } from "@/render/train/trainModels";
 import { trainFx } from "./trainFx";
 
 const OFFSET = new Vector3(-16, 30, 38);
+const OFFSET_LENGTH = OFFSET.length();
 const SUN = new Vector3(28, 46, 14);
 const DIORAMA_FOV = 30;
 const CAB_FOV = 62;
 const TRANSITION_SECONDS = 1.2;
+/** The diorama frame is always at least this wide (half-width) at the train: loco plus margin. */
+const MIN_HALF_WIDTH = 8.5;
 
 const p: RoutePoint = { x: 0, y: 0, z: 0, dx: 1, dy: 0, dz: 0 };
 const desired = new Vector3();
@@ -79,8 +83,11 @@ export function CameraRig({
     const wantCab = useSettingsStore.getState().cameraMode === "cab";
 
     // --- Diorama pose -----------------------------------------------------------------------
-    const lookAhead =
+    const ahead =
       s.phase === "docked" ? 4 + Math.min(railheadS(s.laid) - s.trainS, 20) * 0.25 : 6;
+    // 0 on landscape screens, 1 on tall phone screens: those centre on the engine itself.
+    const narrow = Math.min(1, Math.max(0, (1.2 - camera.aspect) / 0.7));
+    const lookAhead = ahead + (1 - LOCO_LENGTH / 2 - ahead) * narrow;
     game.route.pointAt(s.trainS + lookAhead, p);
     desired.set(p.x, p.y, p.z);
     if (!initialised.current) {
@@ -88,7 +95,11 @@ export function CameraRig({
       initialised.current = true;
     }
     target.lerp(desired, damp(3, dt));
-    dioPos.copy(target).addScaledVector(OFFSET, zoom.current);
+    // Back off on narrow screens until the frame is wide enough for the whole locomotive.
+    const halfWidth =
+      OFFSET_LENGTH * zoom.current * Math.tan((DIORAMA_FOV * Math.PI) / 360) * camera.aspect;
+    const fit = Math.max(1, MIN_HALF_WIDTH / halfWidth);
+    dioPos.copy(target).addScaledVector(OFFSET, zoom.current * fit);
     if (!reducedMotion) dioPos.y += trainFx.jolt * 0.25;
     m.lookAt(dioPos, target, UP);
     dioQuat.setFromRotationMatrix(m);
