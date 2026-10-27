@@ -3,35 +3,17 @@
 import { useEffect, useRef } from "react";
 import type { QualitySetting } from "@/render/effects/quality";
 import { useActiveQualityLevel, useSettingsStore } from "@/game/state/settingsStore";
+import { useMessages } from "@/i18n/i18n";
 import { sfx } from "@/audio/sfx";
 import { Credit } from "./Credit";
+import { LanguageSelect } from "./LanguageSelect";
 
-const QUALITY_OPTIONS: { value: QualitySetting; label: string; hint: string }[] = [
-  { value: "auto", label: "Auto", hint: "Adjusts to your device" },
-  { value: "low", label: "Low", hint: "No shadows or effects" },
-  { value: "medium", label: "Medium", hint: "Shadows + bloom" },
-  { value: "high", label: "High", hint: "Adds ambient occlusion" },
-  { value: "ultra", label: "Ultra", hint: "Sharpest shadows" },
-];
+const QUALITY_OPTIONS: QualitySetting[] = ["auto", "low", "medium", "high", "ultra"];
 
-const CONTROLS: [string, string][] = [
-  ["Click / tap the scene", "Lay a piece of track"],
-  ["Hold mouse / finger", "Keep laying track"],
-  ["Space (hold to repeat)", "Lay track"],
-  ["Lay track button", "Lay track"],
-  ["V", "Switch Diorama / Cab view"],
-  ["Mouse wheel", "Zoom (Diorama view)"],
-  ["Drag (Cab view)", "Look around"],
-  ["Arrow keys / C (Cab view)", "Look around / re-centre"],
-  ["`  (backtick)", "Toggle the debug overlay"],
-  ["Esc", "Close this panel"],
-];
-
-const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);
-
-/** Settings panel: sound, graphics quality, and a controls reference. Native modal <dialog>. */
+/** Settings panel: language, sound, graphics quality, controls reference. Native modal <dialog>. */
 export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const t = useMessages();
   const muted = useSettingsStore((s) => s.muted);
   const volume = useSettingsStore((s) => s.volume);
   const quality = useSettingsStore((s) => s.quality);
@@ -55,27 +37,34 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
         // Click on the backdrop (outside the panel) closes.
         if (e.target === e.currentTarget) onClose();
       }}
-      className="panel m-auto w-[min(30rem,calc(100vw-1.5rem))] p-0 text-amber-50 backdrop:bg-black/50"
+      className="panel m-auto w-[min(34rem,calc(100vw-1.5rem))] p-0 text-amber-50 backdrop:bg-black/50"
       aria-labelledby="settings-title"
       data-testid="settings-dialog"
     >
       <div className="flex max-h-[calc(100dvh-3rem)] flex-col gap-5 overflow-y-auto p-5">
         <header className="flex items-center justify-between">
           <h2 id="settings-title" className="font-body text-lg text-amber-300">
-            Settings
+            {t.settings.title}
           </h2>
           <button
             onClick={onClose}
             className="rounded px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-amber-300"
-            aria-label="Close settings"
+            aria-label={t.settings.closeLabel}
           >
-            Close ✕
+            {t.close}
           </button>
         </header>
 
+        <section aria-labelledby="settings-language">
+          <h3 id="settings-language" className="font-pixel mb-2 text-xs text-amber-200">
+            {t.language}
+          </h3>
+          <LanguageSelect variant="field" testId="settings-language" />
+        </section>
+
         <section aria-labelledby="settings-sound">
           <h3 id="settings-sound" className="font-pixel mb-2 text-xs text-amber-200">
-            Sound
+            {t.settings.sound}
           </h3>
           <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-sm">
@@ -86,10 +75,10 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
                 onChange={(e) => setMuted(!e.target.checked)}
                 data-testid="settings-sound-toggle"
               />
-              Sound effects
+              {t.settings.soundEffects}
             </label>
             <label className="flex flex-1 items-center gap-3 text-sm">
-              <span className="shrink-0">Volume</span>
+              <span className="shrink-0">{t.settings.volume}</span>
               <input
                 type="range"
                 min={0}
@@ -113,31 +102,34 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
 
         <section aria-labelledby="settings-quality">
           <h3 id="settings-quality" className="font-pixel mb-2 text-xs text-amber-200">
-            Graphics quality
+            {t.settings.quality}
           </h3>
           <div
             role="radiogroup"
             aria-labelledby="settings-quality"
             className="grid grid-cols-2 gap-2 sm:grid-cols-5"
           >
-            {QUALITY_OPTIONS.map((o) => {
-              const selected = quality === o.value;
+            {QUALITY_OPTIONS.map((value) => {
+              const selected = quality === value;
+              const option = t.settings.qualityOptions[value];
               return (
                 <button
-                  key={o.value}
+                  key={value}
                   role="radio"
                   aria-checked={selected}
-                  onClick={() => setQuality(o.value)}
-                  data-testid={`quality-${o.value}`}
+                  onClick={() => setQuality(value)}
+                  data-testid={`quality-${value}`}
                   className={`rounded-md border px-2 py-2 text-left text-sm transition focus-visible:outline-2 focus-visible:outline-amber-300 ${
                     selected
                       ? "border-amber-400 bg-amber-700/50"
                       : "border-white/10 bg-black/20 hover:bg-white/10"
                   }`}
                 >
-                  <span className="block font-semibold">{o.label}</span>
-                  <span className="block text-xs leading-tight text-amber-100/60">
-                    {o.value === "auto" ? `Now: ${capitalize(active)}` : o.hint}
+                  <span className="block font-semibold">{option.label}</span>
+                  <span className="block break-words text-xs leading-tight text-amber-100/60">
+                    {value === "auto"
+                      ? t.settings.qualityNow(t.settings.qualityOptions[active].label)
+                      : option.hint}
                   </span>
                 </button>
               );
@@ -147,11 +139,11 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
 
         <section aria-labelledby="settings-controls">
           <h3 id="settings-controls" className="font-pixel mb-2 text-xs text-amber-200">
-            Controls
+            {t.settings.controls}
           </h3>
           <table className="w-full rounded-md bg-black/25 text-sm">
             <tbody>
-              {CONTROLS.map(([input, action]) => (
+              {t.settings.controlRows.map(([input, action]) => (
                 <tr key={input} className="border-b border-white/5 last:border-0">
                   <th
                     scope="row"

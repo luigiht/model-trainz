@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { backToResume, submitProfile, useSession } from "@/game/session/session";
+import { backToResume, submitProfile, useSession, type ProfileError } from "@/game/session/session";
+import { useMessages } from "@/i18n/i18n";
 import { PLAYER_NAME_MAX } from "@/lib/gameId";
 
 const FIELD =
@@ -12,9 +13,10 @@ export function ProfileForm() {
   const suggestedId = useSession((s) => s.suggestedId);
   const suggestedName = useSession((s) => s.suggestedName);
   const resumable = useSession((s) => s.resumable);
+  const t = useMessages();
   const [name, setName] = useState<string | null>(null);
   const [id, setId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ProfileError | null>(null);
   const [busy, setBusy] = useState(false);
   const nameValue = name ?? suggestedName;
   const idValue = id ?? suggestedId;
@@ -22,7 +24,7 @@ export function ProfileForm() {
   return (
     <form
       className="panel flex w-[min(22rem,calc(100vw-3rem))] flex-col gap-3 p-4"
-      aria-label="Start playing"
+      aria-label={t.profile.formLabel}
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
@@ -31,7 +33,7 @@ export function ProfileForm() {
       }}
     >
       <label className="flex flex-col gap-1">
-        <span className="font-body text-sm text-amber-200">Your name</span>
+        <span className="font-body text-sm text-amber-200">{t.profile.name}</span>
         <input
           data-testid="profile-name"
           className={FIELD}
@@ -39,14 +41,14 @@ export function ProfileForm() {
           onChange={(e) => setName(e.target.value)}
           maxLength={PLAYER_NAME_MAX}
           autoComplete="nickname"
-          placeholder="e.g. Ada"
+          placeholder={t.profile.namePlaceholder}
           required
           autoFocus
         />
       </label>
       <label className="flex flex-col gap-1">
         <span className="font-body text-sm text-amber-200">
-          Game ID <span className="text-amber-100/60">(optional)</span>
+          {t.gameId} <span className="text-amber-100/60">{t.profile.optional}</span>
         </span>
         <input
           data-testid="profile-id"
@@ -56,19 +58,19 @@ export function ProfileForm() {
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
-          placeholder="e.g. 7K2M-9QXP-4HCW"
+          placeholder={t.profile.idPlaceholder}
           aria-describedby="profile-id-hint"
         />
         <span
           id="profile-id-hint"
           className="text-xs text-amber-100/65 [@media(max-height:500px)]:sr-only"
         >
-          Have the ID of a previous game? Enter it to keep playing that game.
+          {t.profile.idHint}
         </span>
       </label>
       {error && (
         <p role="alert" className="text-sm text-red-300">
-          {error}
+          {t.profile.errors[error]}
         </p>
       )}
       <button
@@ -77,7 +79,7 @@ export function ProfileForm() {
         disabled={busy || !nameValue.trim()}
         className="font-body rounded-lg border-2 border-amber-300 bg-gradient-to-b from-amber-400 to-amber-600 px-6 py-2.5 text-sm text-[#2a1a08] shadow-lg transition active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:opacity-50"
       >
-        {busy ? "Starting…" : "Play"}
+        {busy ? t.profile.starting : t.profile.play}
       </button>
       {resumable && (
         <button
@@ -85,7 +87,7 @@ export function ProfileForm() {
           onClick={backToResume}
           className="self-center rounded text-xs text-amber-100/70 underline underline-offset-2 hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-amber-300"
         >
-          Back to my previous game
+          {t.profile.back}
         </button>
       )}
     </form>

@@ -3,6 +3,7 @@
 import { useShallow } from "zustand/react/shallow";
 import { useHud } from "@/game/state/game";
 import { stationName } from "@/game/content/stations";
+import { useMessages } from "@/i18n/i18n";
 import { formatCoins, formatDistance, formatNumber } from "@/lib/format";
 
 /** Coins, route and progress toward the next station. */
@@ -19,17 +20,23 @@ export function StatusPanel() {
       distance: s.distance,
     })),
   );
+  const t = useMessages().status;
   const from = stationName(h.station);
   const to = stationName(h.station + 1);
   const status =
     h.phase === "traveling"
-      ? `Chuffing to ${to}…`
+      ? t.traveling(to)
       : h.piecesToNext > 0
-        ? `Lay ${h.piecesToNext} more piece${h.piecesToNext === 1 ? "" : "s"} to reach ${to}`
-        : `All aboard for ${to}!`;
+        ? t.layMore(h.piecesToNext, to)
+        : t.allAboard(to);
+  const rates = [
+    t.perClick(h.perClick, formatNumber(h.perClick)),
+    h.autoLay > 0 && t.gangRate(formatNumber(h.autoLay)),
+    t.travelled(formatDistance(h.distance)),
+  ];
 
   return (
-    <section className="panel w-full p-3" aria-label="Status">
+    <section className="panel w-full p-3" aria-label={t.label}>
       <div
         className="font-pixel text-3xl leading-none text-amber-300"
         data-testid="coins"
@@ -37,11 +44,7 @@ export function StatusPanel() {
       >
         {formatCoins(h.coins)}
       </div>
-      <div className="mt-1 text-xs text-amber-100/70">
-        {formatNumber(h.perClick)} piece{h.perClick === 1 ? "" : "s"}/click
-        {h.autoLay > 0 && <> · {formatNumber(h.autoLay)}/sec by the track gang</>} ·{" "}
-        {formatDistance(h.distance)} travelled
-      </div>
+      <div className="mt-1 text-xs text-amber-100/70">{rates.filter(Boolean).join(" · ")}</div>
       <div className="mt-3 flex items-baseline justify-between gap-2 text-sm">
         <span className="font-body text-amber-50">{from}</span>
         <span aria-hidden className="text-amber-200/60">
@@ -52,7 +55,7 @@ export function StatusPanel() {
       <div
         className="mt-1 h-3 overflow-hidden rounded-full border border-amber-900/60 bg-black/40"
         role="progressbar"
-        aria-label={`Track laid toward ${to}`}
+        aria-label={t.progressLabel(to)}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(h.legProgress * 100)}

@@ -1,8 +1,11 @@
+import { useMessages } from "@/i18n/i18n";
+
 /** Copyright line shown on the loading screen and in Settings. */
 export function Credit({ className = "" }: { className?: string }) {
+  const t = useMessages();
   return (
     <p className={`text-xs text-amber-100/60 ${className}`}>
-      © {new Date().getFullYear()} Model Trainz. Created by{" "}
+      © {new Date().getFullYear()} Model Trainz. {t.createdBy}{" "}
       <a
         href="https://www.luigiht.com"
         target="_blank"

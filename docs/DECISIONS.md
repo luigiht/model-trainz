@@ -206,3 +206,21 @@ grant select, insert, update on public.games to service_role;
   length and bogie spacing are scaled to match.
 - **Draw calls:** `Builder.build()` merges every static mesh per material, so the extra detail
   (bogies, louvres, cab) costs a handful of draw calls per vehicle.
+
+## Languages (English, Spanish, Italian)
+
+- **Client-side, no library, no locale routes.** `src/i18n/` holds typed dictionaries
+  (`messages/en.ts` is the source of truth; `es`/`it` are typed `Messages`, so a missing key fails
+  `pnpm typecheck`, and a unit test checks array lengths and arity). Components read
+  `useMessages()`; event handlers (toasts, floaters) use `currentMessages()`. Switching language
+  re-renders in place, mid-game, without remounting the canvas, which `/[lang]` routes would do.
+- **Detection:** the first of `navigator.languages` we support (`es-MX` → `es`), else English;
+  follows `languagechange`. Picking a language (start-screen footer or Settings) stores it in
+  the persisted settings (`locale`, null = follow the browser) and wins from then on.
+- **No flash, page stays static.** The server can't know the language, so it renders English and
+  the start screen's text stays `invisible` until hydration, then appears in the right language
+  (the HUD is behind the opaque loader by then). `<html lang>` is updated on the client.
+- **Not translated:** station names (proper nouns, part of the world), the brand, the debug
+  overlay, and number formats (`$1.25K`, `0.5`/s stay game-wide, as in the HUD).
+- **Fonts:** the body font (EAS VHS) and Silkscreen's latin subset cover the accented letters and
+  `¡ ¿` used; avoid characters outside Latin-1 (e.g. en dash) in `font-body`/`font-pixel` text.

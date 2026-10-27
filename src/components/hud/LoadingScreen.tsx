@@ -2,25 +2,21 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import logo from "@/assets/model-trainz-logo.svg";
 import { useSession } from "@/game/session/session";
+import { useMessages } from "@/i18n/i18n";
 import { Credit } from "./Credit";
+import { LanguageSelect } from "./LanguageSelect";
 import { ProfileForm } from "./ProfileForm";
 import { ResumeCard } from "./ResumeCard";
 
 const LoadingScene = dynamic(() => import("@/components/game/LoadingScene"), { ssr: false });
 
-const TIPS = [
-  "Tip: click or tap the land to lay track. Hold to keep going.",
-  "Tip: press V to hop between the cab and the diorama view.",
-  "Tip: the track gang lays track for you while you play.",
-  "Tip: golden spikes can pay out 20× on a single click.",
-  "Tip: press ` to show the debug overlay.",
-];
-
 /** How long the fade-out runs before the backdrop scene is unmounted (frees its WebGL context). */
 const FADE_MS = 700;
+
+const subscribeNothing = () => () => {};
 
 /** Full-screen loader: the logo over a cab-view ride built from the game's own models. */
 export function LoadingScreen({
@@ -34,9 +30,16 @@ export function LoadingScreen({
   const [sceneReady, setSceneReady] = useState(false);
   const [sceneMounted, setSceneMounted] = useState(true);
   const phase = useSession((s) => s.phase);
+  const t = useMessages();
+  // The server can't know the player's language, so text waits for the client.
+  const hydrated = useSyncExternalStore(
+    subscribeNothing,
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
-    const id = window.setInterval(() => setTip((t) => (t + 1) % TIPS.length), 3500);
+    const id = window.setInterval(() => setTip((i) => i + 1), 3500);
     return () => window.clearInterval(id);
   }, []);
 
@@ -81,7 +84,7 @@ export function LoadingScreen({
             className="h-auto w-full drop-shadow-[0_4px_0_rgb(0_0_0/0.55)]"
           />
         </h1>
-        <div className="flex flex-col items-center gap-3">
+        <div className={`flex flex-col items-center gap-3 ${hydrated ? "" : "invisible"}`}>
           {phase === "profile" ? (
             <ProfileForm />
           ) : phase === "resume" ? (
@@ -92,11 +95,14 @@ export function LoadingScreen({
               aria-live="polite"
               className="panel max-w-sm px-4 py-2 text-center text-sm text-amber-50"
             >
-              <span className="sr-only">Loading. </span>
-              {TIPS[tip]}
+              <span className="sr-only">{t.loading.srLoading}</span>
+              {t.loading.tips[tip % t.loading.tips.length]}
             </p>
           )}
-          <Credit className="text-center text-amber-100/75" />
+          <footer className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-amber-100/75">
+            <Credit className="text-center text-amber-100/75" />
+            <LanguageSelect variant="link" testId="start-language" />
+          </footer>
         </div>
       </div>
     </div>

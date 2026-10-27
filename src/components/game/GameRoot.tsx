@@ -17,6 +17,7 @@ import { formatCoins } from "@/lib/format";
 import { sfx } from "@/audio/sfx";
 import { nudgeCabLook, resetCabLook, trainFx } from "./trainFx";
 import { useSettingsStore } from "@/game/state/settingsStore";
+import { currentMessages, useLocale, useMessages } from "@/i18n/i18n";
 
 const GameCanvas = dynamic(() => import("./GameCanvas"), { ssr: false });
 
@@ -57,7 +58,7 @@ function layAt(x: number, y: number) {
   sfx.clank();
   if (res.golden) {
     sfx.golden();
-    spawnFloater(x, y, `GOLDEN SPIKE! +${formatCoins(res.coins)}`, "golden");
+    spawnFloater(x, y, `${currentMessages().hud.goldenSpike} +${formatCoins(res.coins)}`, "golden");
   } else {
     spawnFloater(x, y, `+${formatCoins(res.coins)}`);
   }
@@ -72,10 +73,16 @@ export function GameRoot() {
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false);
   const firstTime = useHud((s) => s.clicks === 0);
   const hold = useRef<{ delay?: number; interval?: number }>({});
+  const locale = useLocale();
+  const t = useMessages();
 
   useEffect(() => {
     void bootSession();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   // Simulation events → sound, toasts, floaters.
   useEffect(
@@ -83,11 +90,11 @@ export function GameRoot() {
       onGameEvent((e) => {
         if (e.type === "depart") {
           sfx.whistle();
-          toast(`Toot toot! Departing ${stationName(e.station)}.`);
+          toast(currentMessages().hud.departing(stationName(e.station)));
         } else if (e.type === "arrive") {
           sfx.arrive();
           sfx.coin();
-          toast(`Arrived at ${stationName(e.station)}: fares +${formatCoins(e.fare)}`);
+          toast(currentMessages().hud.arrived(stationName(e.station), formatCoins(e.fare)));
           spawnFloater(
             window.innerWidth / 2,
             window.innerHeight * 0.42,
@@ -274,9 +281,8 @@ export function GameRoot() {
         <div className="relative flex flex-col items-center gap-2">
           {firstTime && ready && (
             <p className="hint panel px-4 py-2 text-center text-sm text-amber-100">
-              <span className="pointer-coarse:hidden">Click</span>
-              <span className="hidden pointer-coarse:inline">Tap</span> the station (or anywhere on
-              the land) to lay track. Hold to keep going!
+              <span className="pointer-coarse:hidden">{t.hud.hintClick}</span>
+              <span className="hidden pointer-coarse:inline">{t.hud.hintTap}</span>
             </p>
           )}
           <button
@@ -297,7 +303,8 @@ export function GameRoot() {
               }
             }}
           >
-            Lay track <span className="opacity-70 pointer-coarse:hidden">(Space)</span>
+            {t.hud.layTrack}{" "}
+            <span className="opacity-70 pointer-coarse:hidden">{t.hud.layTrackKey}</span>
           </button>
           <div className="pointer-events-auto sm:absolute sm:bottom-1 sm:left-0">
             <ViewToggle />

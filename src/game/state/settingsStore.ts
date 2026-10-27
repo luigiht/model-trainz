@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { AUTO_START_LEVEL, type QualityLevel, type QualitySetting } from "@/render/effects/quality";
+import type { Locale } from "@/i18n/locales";
 
 export type CameraMode = "diorama" | "cab";
 
@@ -22,6 +23,9 @@ export interface SettingsState {
   setQuality: (quality: QualitySetting) => void;
   setResolutionScale: (scale: number) => void;
   setEffect: (effect: "shadows" | "ssao" | "bloom" | "tiltShift", enabled: boolean) => void;
+  /** The player's language; null follows the browser. */
+  locale: Locale | null;
+  setLocale: (locale: Locale) => void;
 }
 
 const SETTINGS_VERSION = 1;
@@ -45,6 +49,8 @@ export const useSettingsStore = create<SettingsState>()(
       setResolutionScale: (resolutionScale) =>
         set({ resolutionScale: Math.min(1, Math.max(0.5, resolutionScale)) }),
       setEffect: (effect, enabled) => set({ [effect]: enabled }),
+      locale: null,
+      setLocale: (locale) => set({ locale }),
     }),
     {
       name: "rbc-settings",

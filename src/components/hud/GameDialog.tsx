@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSession, type SyncStatus } from "@/game/session/session";
-
-const SYNC_TEXT: Record<SyncStatus, string> = {
-  idle: "Not saved online yet.",
-  saving: "Saving online…",
-  saved: "Saved online.",
-  offline: "Can't reach the server right now, so progress is saved on this device for now.",
-};
+import { useSession } from "@/game/session/session";
+import { useMessages } from "@/i18n/i18n";
 
 const BUTTON =
   "shrink-0 rounded border border-amber-500/60 px-3 py-1.5 text-sm hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-amber-300";
@@ -20,6 +14,7 @@ export function GameDialog({ open, onClose }: { open: boolean; onClose: () => vo
   const name = useSession((s) => s.name);
   const gameId = useSession((s) => s.gameId);
   const sync = useSession((s) => s.sync);
+  const t = useMessages();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -54,26 +49,26 @@ export function GameDialog({ open, onClose }: { open: boolean; onClose: () => vo
       <div className="flex max-h-[calc(100dvh-3rem)] flex-col gap-4 overflow-y-auto p-5">
         <header className="flex items-center justify-between">
           <h2 id="game-title" className="font-body text-lg text-amber-300">
-            Game
+            {t.gameDialog.title}
           </h2>
           <button
             onClick={onClose}
             className="rounded px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-amber-300"
-            aria-label="Close game panel"
+            aria-label={t.gameDialog.closeLabel}
           >
-            Close ✕
+            {t.close}
           </button>
         </header>
 
         <dl className="flex flex-col gap-4">
           <div>
-            <dt className="font-pixel mb-1 text-xs text-amber-200">Player</dt>
+            <dt className="font-pixel mb-1 text-xs text-amber-200">{t.gameDialog.player}</dt>
             <dd className="font-body text-base" data-testid="game-player">
               {name}
             </dd>
           </div>
           <div>
-            <dt className="font-pixel mb-1 text-xs text-amber-200">Game ID</dt>
+            <dt className="font-pixel mb-1 text-xs text-amber-200">{t.gameId}</dt>
             <dd className="flex items-center justify-between gap-3">
               <code
                 ref={idText}
@@ -83,22 +78,18 @@ export function GameDialog({ open, onClose }: { open: boolean; onClose: () => vo
                 {gameId}
               </code>
               <button className={BUTTON} onClick={copyId}>
-                {copied ? "Copied!" : "Copy ID"}
+                {copied ? t.gameDialog.copied : t.gameDialog.copy}
               </button>
             </dd>
           </div>
         </dl>
         <span className="sr-only" aria-live="polite">
-          {copied ? "Game ID copied to the clipboard." : ""}
+          {copied ? t.gameDialog.copiedAnnouncement : ""}
         </span>
 
-        <p className="text-sm text-amber-100/80">
-          Keep this Game ID to continue this game on any device: enter it on the start screen. The
-          address bar also includes it, so a bookmark brings you straight back. Anyone with the ID
-          can play this game.
-        </p>
+        <p className="text-sm text-amber-100/80">{t.gameDialog.explainer}</p>
         <p role="status" className="text-xs text-amber-100/60">
-          {SYNC_TEXT[sync]}
+          {t.gameDialog.sync[sync]}
         </p>
       </div>
     </dialog>

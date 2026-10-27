@@ -1,11 +1,9 @@
 /** Train sets sold at the Depot. Cosmetic: every set runs and earns exactly like the others. */
 export type TrainSetId = "heritage" | "express37";
 
+/** Display text (name, kind, flavor) lives in the i18n messages, keyed by id. */
 export interface TrainSetDef {
   id: TrainSetId;
-  name: string;
-  kind: string;
-  flavor: string;
   price: number;
   /** Livery colours for the shop swatch (CSS hex). */
   livery: [string, string, string];
@@ -14,17 +12,11 @@ export interface TrainSetDef {
 export const TRAIN_SETS: TrainSetDef[] = [
   {
     id: "heritage",
-    name: "Heritage Steam",
-    kind: "Steam tank engine + teak coaches",
-    flavor: "Where it all began.",
     price: 0,
     livery: ["#2f7a4f", "#8a2f3a", "#f0e2bf"],
   },
   {
     id: "express37",
-    name: "Highland Express",
-    kind: "Type 3 diesel + express coaches",
-    flavor: "Thrashes like a tractor, cruises like a dream.",
     price: 50_000,
     livery: ["#f2b51c", "#474d55", "#2aa3d8"],
   },

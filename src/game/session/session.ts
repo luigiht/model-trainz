@@ -184,21 +184,25 @@ export function backToResume() {
   useSession.setState({ phase: "resume" });
 }
 
-/** Name form. Returns an error message to show, or null once the game has started. */
-export async function submitProfile(nameInput: string, idInput: string): Promise<string | null> {
+/** Why the name form couldn't start the game (shown in the player's language by the form). */
+export type ProfileError = "name" | "id" | "offline";
+
+/** Name form. Returns what went wrong, or null once the game has started. */
+export async function submitProfile(
+  nameInput: string,
+  idInput: string,
+): Promise<ProfileError | null> {
   const name = cleanPlayerName(nameInput);
-  if (!name) return "Please enter your name.";
+  if (!name) return "name";
   if (!idInput.trim()) {
     const id = generateGameId((n) => crypto.getRandomValues(new Uint8Array(n)));
     await enterGame(name, id, { keepCurrent: adoptOnScreen, requireServer: false });
     return null;
   }
   const id = normalizeGameId(idInput);
-  if (!id) return "That isn't a Game ID: use 4–24 letters, numbers or dashes.";
+  if (!id) return "id";
   const ok = await enterGame(name, id, { keepCurrent: adoptOnScreen, requireServer: true });
-  return ok
-    ? null
-    : "Couldn't reach the game server to look up that ID. Try again, or leave it empty to start a new game.";
+  return ok ? null : "offline";
 }
 
 let syncing = false;

@@ -5,6 +5,7 @@ import { useShallow } from "zustand/react/shallow";
 import { UPGRADES } from "@/game/content/upgrades";
 import { isMaxed, upgradeCost } from "@/game/economy/economy";
 import { playerBuy, useHud } from "@/game/state/game";
+import { useMessages } from "@/i18n/i18n";
 import { formatCoins } from "@/lib/format";
 import { sfx } from "@/audio/sfx";
 import { DepotList } from "./DepotList";
@@ -35,6 +36,7 @@ const subscribeCompact = (cb: () => void) => {
  */
 export function UpgradeShop() {
   const { coins, levels } = useHud(useShallow((s) => ({ coins: s.coins, levels: s.levels })));
+  const t = useMessages();
   const compact = useSyncExternalStore(
     subscribeCompact,
     () => window.matchMedia(COMPACT).matches,
@@ -65,7 +67,9 @@ export function UpgradeShop() {
           className="panel absolute right-full top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 rounded-r-none! border-r-0! px-2 py-3 text-amber-200 focus-visible:outline-2 focus-visible:outline-amber-300"
         >
           <PixelIcon name="chevronLeft" className={`h-3.5 w-2.5 ${open ? "rotate-180" : ""}`} />
-          <span className="font-body rotate-180 text-sm [writing-mode:vertical-rl]">Upgrades</span>
+          <span className="font-body rotate-180 text-sm [writing-mode:vertical-rl]">
+            {t.shop.upgrades}
+          </span>
         </button>
       )}
       <section
@@ -76,14 +80,14 @@ export function UpgradeShop() {
             ? "w-[min(20rem,calc(100vw-3.5rem))] rounded-r-none! border-r-0!"
             : "w-[min(20rem,calc(100vw-1.5rem))]"
         }`}
-        aria-label="Shop"
+        aria-label={t.shop.label}
       >
         <div className="flex items-center justify-between px-2.5 py-1.5">
-          <div role="tablist" aria-label="Shop" className="flex gap-3">
+          <div role="tablist" aria-label={t.shop.label} className="flex gap-3">
             {(
               [
-                ["upgrades", "Upgrades", "upgrade-list"],
-                ["depot", "Depot", "depot-list"],
+                ["upgrades", t.shop.upgrades, "upgrade-list"],
+                ["depot", t.shop.depot, "depot-list"],
               ] as const
             )
               .filter(([value]) => value !== "depot" || DEPOT_ENABLED)
@@ -119,7 +123,7 @@ export function UpgradeShop() {
               aria-expanded={open}
               aria-controls={panelId}
             >
-              {open ? "Hide" : "Show"}
+              {open ? t.shop.hide : t.shop.show}
               <svg
                 aria-hidden
                 viewBox="0 0 12 12"
@@ -133,7 +137,7 @@ export function UpgradeShop() {
         <ul
           id="upgrade-list"
           role="tabpanel"
-          aria-label="Upgrades"
+          aria-label={t.shop.upgrades}
           className={`${showLists && tab === "upgrades" ? "flex" : "hidden"} flex-col gap-1.5 overflow-y-auto overscroll-contain px-2.5 pb-2.5 [@media(max-height:520px)]:gap-1`}
         >
           {UPGRADES.map((u) => {
@@ -141,6 +145,7 @@ export function UpgradeShop() {
             const maxed = isMaxed(u.id, level);
             const cost = upgradeCost(u.id, level);
             const affordable = !maxed && coins >= cost;
+            const text = t.upgrades[u.id];
             return (
               <li key={u.id}>
                 <button
@@ -166,18 +171,18 @@ export function UpgradeShop() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className="font-body truncate text-sm text-amber-50">{u.name}</span>
+                      <span className="font-body truncate text-sm text-amber-50">{text.name}</span>
                       <span
                         className={`shrink-0 font-mono text-xs ${affordable ? "text-amber-300" : "text-amber-100/50"}`}
                       >
-                        {maxed ? "MAX" : formatCoins(cost)}
+                        {maxed ? t.shop.max : formatCoins(cost)}
                       </span>
                     </span>
                     <span className="block text-xs leading-tight text-amber-100/80">
-                      {u.effect}
+                      {text.detail}
                     </span>
                     <span className="block text-xs italic leading-tight text-amber-100/45 [@media(max-height:600px)]:hidden">
-                      {u.flavor}
+                      {text.flavor}
                     </span>
                   </span>
                 </button>

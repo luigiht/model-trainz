@@ -17,6 +17,7 @@ src/render/train/           trainModels (loco + carriages from primitives), cabI
 src/render/workers/         chunk.worker, ChunkWorkerPool, buildChunk (shared with fallback)
 src/render/effects/         quality tiers, QualityGovernor
 src/audio/sfx.ts            procedural sound effects
+src/i18n/                   locales (detection), messages/{en,es,it} dictionaries, i18n.ts hooks
 ```
 
 ## Data flow

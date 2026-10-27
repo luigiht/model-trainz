@@ -41,4 +41,6 @@ The full design brief lives in `docs/BRIEF.md`; the milestone plan in `docs/PLAN
 - `src/game/**` and `src/lib/**` — pure TS (no three/React imports in `simulation`, `economy`, `lib`).
 - `src/render/**` — three.js code (terrain chunks + workers, train/station models, effects).
 - `src/components/**` — React/R3F components (`game/` canvas + scene, `hud/` UI).
+- `src/i18n/**` — UI text in English, Spanish and Italian. Add new strings to `messages/en.ts` first,
+  then `es.ts` / `it.ts`; never hard-code player-facing text in components.
 - `tests/unit` (Vitest), `tests/e2e` (Playwright).

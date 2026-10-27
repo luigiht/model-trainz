@@ -7,6 +7,7 @@ import { useShallow } from "zustand/react/shallow";
 import { resolveDpr, resolveEffects } from "@/render/effects/quality";
 import { useActiveQualityLevel, useSettingsStore } from "@/game/state/settingsStore";
 import { game } from "@/game/state/game";
+import { useMessages } from "@/i18n/i18n";
 import { vividCss } from "@/render/palette";
 import { CameraRig } from "./CameraRig";
 import { GameDriver } from "./GameDriver";
@@ -31,6 +32,7 @@ export default function GameCanvas({
   reducedMotion: boolean;
 }) {
   const level = useActiveQualityLevel();
+  const t = useMessages();
   const toggles = useSettingsStore(
     useShallow((s) => ({
       shadows: s.shadows,
@@ -54,7 +56,7 @@ export default function GameCanvas({
       flat
       gl={{ antialias: false, powerPreference: "high-performance", preserveDrawingBuffer: true }}
       camera={{ fov: 30, near: 1, far: 700 }}
-      aria-label="Model Trainz: your train and the railway you are building"
+      aria-label={t.canvasLabel}
       role="img"
     >
       <color attach="background" args={[SKY]} />

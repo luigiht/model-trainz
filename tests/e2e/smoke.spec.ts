@@ -52,6 +52,41 @@ test("players without a name are hard-refreshed onto a newer build (once)", asyn
   await expect(page).not.toHaveURL(/v=newer-build/);
 });
 
+test.describe("with a Spanish browser", () => {
+  test.use({ locale: "es-ES" });
+
+  test("the game speaks the browser's language; the start screen and Settings switch it", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("profile-play")).toHaveText("Jugar");
+    await expect(page.getByTestId("start-language")).toHaveValue("es");
+    await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    await page.screenshot({ path: "test-results/screenshots/start-es.png" });
+
+    await page.getByTestId("start-language").selectOption("it");
+    await expect(page.getByTestId("profile-play")).toHaveText("Gioca");
+    await expect(page.locator("html")).toHaveAttribute("lang", "it");
+    await page.getByTestId("profile-name").fill("Ada");
+    await page.getByTestId("profile-play").click();
+    await expect(page.locator("main[data-ready='true']")).toBeVisible({ timeout: 45_000 });
+    await expect(page.getByTestId("lay-track")).toContainText("Posa binari");
+    await expect(page.getByTestId("buy-shovel")).toContainText("Pale più grandi");
+    await page.screenshot({ path: "test-results/screenshots/hud-it.png" });
+
+    await page.getByTestId("settings").click();
+    await expect(page.getByTestId("settings-language")).toHaveValue("it");
+    await page.getByTestId("settings-language").selectOption("en");
+    await expect(page.getByTestId("settings-dialog")).toContainText("Graphics quality");
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("lay-track")).toContainText("Lay track");
+
+    // The player's choice wins over the browser's language from now on.
+    await page.reload();
+    await expect(page.getByTestId("resume-continue")).toHaveText("Continue");
+  });
+});
+
 test("returning players are invited to continue their game, or start another", async ({ page }) => {
   await ready(page, "Ada");
   await page.keyboard.press("Space");
