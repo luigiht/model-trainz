@@ -162,7 +162,6 @@ export const es: Messages = {
     },
   },
   depot: {
-    intro: "Los trenes nuevos se ven distintos, pero circulan y ganan igual.",
     inService: "En servicio",
     use: "Usar",
   },
@@ -172,10 +171,10 @@ export const es: Messages = {
       detail: "Locomotora tanque de vapor + coches de teca",
       flavor: "Donde todo empezó.",
     },
-    express37: {
-      name: "Expreso de las Highlands",
-      detail: "Diésel Tipo 3 + coches expreso",
-      flavor: "Ruge como un tractor, se desliza como un sueño.",
+    evergreen: {
+      name: "Expreso Siempreverde",
+      detail: "+50% velocidad, +50% tarifas",
+      flavor: "Todo el encanto, nada de carbón.",
     },
   },
   view: {

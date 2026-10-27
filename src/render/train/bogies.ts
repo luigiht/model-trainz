@@ -44,7 +44,8 @@ function brakeBlock(b: Builder, ax: number, r: number, dir: 1 | -1) {
     b.box(0.06, 0.18, 0.1, 0x1d1f22, ax + dir * (r + 0.04), r + 0.45, s * 0.72, STEEL);
 }
 
-export function bogie(b: Builder, x: number, type: BogieType) {
+/** `wheel` is the wheel-centre colour. */
+export function bogie(b: Builder, x: number, type: BogieType, wheel?: number) {
   if (type === "cp1") {
     // Three-axle loco bogie: deep frame, pedestals, equalising beams with coils, nose-hung motors.
     const r = 0.32;
@@ -79,7 +80,7 @@ export function bogie(b: Builder, x: number, type: BogieType) {
       b.barrel(0.06, 0.24, 0x1d1f22, x - 0.55, 1.0, s * 0.6, 8); // brake cylinder
     }
     for (const dx of [-1.3, 1.3]) b.box(0.05, 0.22, 1.5, FRAME, x + dx, 0.62, 0, STEEL); // lifeguard
-    axles.forEach((ax) => b.wheelPair(r, ax, 0x30343a));
+    axles.forEach((ax) => b.wheelPair(r, ax, wheel ?? 0x30343a));
     return;
   }
   // Coach bogie: pressed-steel side frame with a dropped centre, coils on the axleboxes.
@@ -104,6 +105,6 @@ export function bogie(b: Builder, x: number, type: BogieType) {
   for (const s of sides) for (const dx of [-0.16, 0.16]) coil(b, x + dx, 1.07, s * 0.62, 0.14, 0.08);
   axles.forEach((ax, i) => {
     brakeBlock(b, ax, r, i === 0 ? -1 : 1);
-    b.wheelPair(r, ax, 0x3a3e44);
+    b.wheelPair(r, ax, wheel ?? 0x3a3e44);
   });
 }

@@ -148,9 +148,13 @@ describe("economy", () => {
 
   it("derived stats reflect levels", () => {
     const l = emptyLevels();
-    expect(deriveStats(l)).toMatchObject({ piecesPerClick: 1, autoLayPerSec: 0, carriages: 1 });
+    expect(deriveStats(l, "heritage")).toMatchObject({
+      piecesPerClick: 1,
+      autoLayPerSec: 0,
+      carriages: 1,
+    });
     l.carriage = 2;
     l.fares = 4;
-    expect(deriveStats(l).fareMultiplier).toBeCloseTo(2 * 2);
+    expect(deriveStats(l, "heritage").fareMultiplier).toBeCloseTo(2 * 2);
   });
 });

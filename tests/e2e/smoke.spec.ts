@@ -167,6 +167,29 @@ test("buying an upgrade works and progress persists across reloads", async ({ pa
   await expect(page.locator("[data-testid='buy-shovel'] span[aria-hidden]")).toHaveText("1");
 });
 
+test("a purchase is saved online straight away, so the Game ID carries it", async ({
+  page,
+  request,
+}) => {
+  await ready(page);
+  const id = new URL(page.url()).searchParams.get("game");
+  for (let i = 0; i < 10; i++) {
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(90);
+  }
+  const pushed = page.waitForResponse(
+    (r) => r.request().method() === "PUT" && r.url().includes(`/api/games/${id}`),
+  );
+  await page.getByTestId("buy-shovel").click();
+  expect((await pushed).ok()).toBe(true);
+  const stored = (await (await request.get(`/api/games/${id}`)).json()) as { save: string };
+  const { state } = JSON.parse(stored.save) as {
+    state: { levels: { shovel: number }; laid: number; seed: number };
+  };
+  expect(state.levels.shovel).toBe(1);
+  expect(state.laid).toBeGreaterThanOrEqual(10);
+});
+
 test("debug overlay toggles; settings panel changes quality + volume and they persist", async ({
   page,
 }) => {

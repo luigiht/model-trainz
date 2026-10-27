@@ -84,11 +84,12 @@ export function buffers(b: Builder, x: number, dir: 1 | -1, y = 1.1, color = DAR
 }
 
 /** Vertical grab handle on both sides of the body. */
-export function handrail(b: Builder, x: number, y0: number, y1: number, hw = HW) {
-  b.box(0.03, y1 - y0, hw * 2 + 0.07, 0xc9ccd0, x, (y0 + y1) / 2, 0, {
-    roughness: 0.3,
-    metalness: 0.7,
-  });
+export function handrail(b: Builder, x: number, y0: number, y1: number, hw = HW, color = 0xc9ccd0) {
+  for (const s of [-1, 1])
+    b.box(0.03, y1 - y0, 0.04, color, x, (y0 + y1) / 2, s * (hw + 0.015), {
+      roughness: 0.3,
+      metalness: 0.7,
+    });
 }
 
 /** Underframe equipment boxes and an air tank between the bogies. */

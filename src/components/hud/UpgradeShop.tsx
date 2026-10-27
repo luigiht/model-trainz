@@ -9,7 +9,6 @@ import { useMessages } from "@/i18n/i18n";
 import { formatCoins } from "@/lib/format";
 import { sfx } from "@/audio/sfx";
 import { DepotList } from "./DepotList";
-import { DEPOT_ENABLED } from "@/game/content/trainSets";
 import { PixelIcon } from "./PixelIcon";
 
 const BADGE: Record<string, string> = {
@@ -89,29 +88,27 @@ export function UpgradeShop() {
                 ["upgrades", t.shop.upgrades, "upgrade-list"],
                 ["depot", t.shop.depot, "depot-list"],
               ] as const
-            )
-              .filter(([value]) => value !== "depot" || DEPOT_ENABLED)
-              .map(([value, label, controls]) => (
-                <button
-                  key={value}
-                  role="tab"
-                  aria-selected={tab === value}
-                  aria-controls={controls}
-                  data-testid={`tab-${value}`}
-                  onClick={(e) => {
-                    setTab(value);
-                    setOpen(true);
-                    if (e.detail > 0) e.currentTarget.blur();
-                  }}
-                  className={`font-body rounded text-sm underline-offset-4 focus-visible:outline-2 focus-visible:outline-amber-300 ${
-                    tab === value
-                      ? "text-amber-300 underline decoration-2"
-                      : "text-amber-100/60 hover:text-amber-100"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            ).map(([value, label, controls]) => (
+              <button
+                key={value}
+                role="tab"
+                aria-selected={tab === value}
+                aria-controls={controls}
+                data-testid={`tab-${value}`}
+                onClick={(e) => {
+                  setTab(value);
+                  setOpen(true);
+                  if (e.detail > 0) e.currentTarget.blur();
+                }}
+                className={`font-body rounded text-sm underline-offset-4 focus-visible:outline-2 focus-visible:outline-amber-300 ${
+                  tab === value
+                    ? "text-amber-300 underline decoration-2"
+                    : "text-amber-100/60 hover:text-amber-100"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           {!compact && (
             <button
@@ -190,7 +187,7 @@ export function UpgradeShop() {
             );
           })}
         </ul>
-        {DEPOT_ENABLED && <DepotList id="depot-list" hidden={!showLists || tab !== "depot"} />}
+        <DepotList id="depot-list" hidden={!showLists || tab !== "depot"} />
       </section>
     </div>
   );

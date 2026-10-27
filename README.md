@@ -26,15 +26,13 @@ countryside, so it's up to you to build the line.
   | Extra Carriage | +1 carriage on the train, +50% fares |
   | Golden Spikes  | +2% chance that a click pays out 20× |
 
-<!-- Depot is hidden for now (DEPOT_ENABLED in src/game/content/trainSets.ts).
-- **Visit the Depot.** The **Depot** tab next to Upgrades sells new train sets. They're purely
-  cosmetic; once bought you can switch between them for free.
+- **Visit the Depot.** The **Depot** tab next to Upgrades sells new train sets. The one in service
+  sets the train's top speed and fares; once bought you can switch between them for free.
 
-  | Train set        | Price | Locomotive + coaches             |
-  | ---------------- | ----- | -------------------------------- |
-  | Heritage Steam   | Free  | Steam tank engine + teak coaches |
-  | Highland Express | $50K  | Type 3 diesel + express coaches  |
--->
+  | Train set         | Price | Locomotive + coaches             | Bonus                  |
+  | ----------------- | ----- | -------------------------------- | ---------------------- |
+  | Heritage Steam    | Free  | Steam tank engine + teak coaches | —                      |
+  | Evergreen Express | $50K  | Mainline diesel + modern coaches | +50% speed, +50% fares |
 
 - **Pick up where you left off.** Your game pauses when you close the tab. Next time, the start
   screen welcomes you back with a **Continue** button; use your Game ID (in the **Game** panel) to

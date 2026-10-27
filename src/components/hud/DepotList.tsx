@@ -7,7 +7,7 @@ import { useMessages } from "@/i18n/i18n";
 import { formatCoins } from "@/lib/format";
 import { sfx } from "@/audio/sfx";
 
-/** Depot: buy a new train set (cosmetic) or swap back to one already owned. */
+/** Depot: buy a faster, better-paying train set or swap back to one already owned. */
 export function DepotList({ id, hidden }: { id: string; hidden: boolean }) {
   const { coins, trainSet, ownedSets } = useHud(
     useShallow((s) => ({ coins: s.coins, trainSet: s.trainSet, ownedSets: s.ownedSets })),
@@ -21,7 +21,6 @@ export function DepotList({ id, hidden }: { id: string; hidden: boolean }) {
       aria-label={t.shop.depot}
       className={`${hidden ? "hidden" : "flex"} flex-col gap-1.5 overflow-y-auto px-2.5 pb-2.5 [@media(max-height:520px)]:gap-1`}
     >
-      <li className="text-xs leading-tight text-amber-100/60">{t.depot.intro}</li>
       {TRAIN_SETS.map((set) => {
         const owned = ownedSets.includes(set.id);
         const active = trainSet === set.id;
@@ -59,7 +58,9 @@ export function DepotList({ id, hidden }: { id: string; hidden: boolean }) {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-2">
-                  <span className="font-body truncate text-sm text-amber-50">{text.name}</span>
+                  <span className="font-body min-w-0 text-sm leading-tight text-amber-50">
+                    {text.name}
+                  </span>
                   <span
                     className={`shrink-0 font-mono text-xs ${
                       active

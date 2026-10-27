@@ -13,7 +13,6 @@ import {
 } from "@/render/train/trainModels";
 import { placeOnRoute } from "@/render/train/placement";
 import { TRAIN_SET_MODELS } from "@/render/train/trainSetModels";
-import { DEFAULT_TRAIN_SET, DEPOT_ENABLED } from "@/game/content/trainSets";
 import { trainFx } from "./trainFx";
 
 let lastSpeed = 0;
@@ -21,7 +20,7 @@ let lanternVel = 0;
 
 export function Train() {
   const carriages = useHud((s) => s.stats.carriages);
-  const trainSet = useHud((s) => (DEPOT_ENABLED ? s.trainSet : DEFAULT_TRAIN_SET));
+  const trainSet = useHud((s) => s.trainSet);
   const models = TRAIN_SET_MODELS[trainSet];
   const loco = useMemo(() => models.loco(), [models]);
   const cars = useMemo<VehicleModel[]>(
@@ -74,11 +73,11 @@ export function Train() {
     const inCab = trainFx.cabBlend > 0.01;
     if (loco.cab) {
       loco.cab.group.visible = inCab;
-      if (inCab) loco.cab.update(speed / deriveStats(state.levels).maxSpeed, t);
+      if (inCab) loco.cab.update(speed / deriveStats(state.levels, state.trainSet).maxSpeed, t);
     }
     cab.group.visible = steamCab && inCab;
     if (cab.group.visible) {
-      const maxSpeed = deriveStats(state.levels).maxSpeed;
+      const maxSpeed = deriveStats(state.levels, state.trainSet).maxSpeed;
       trainFx.pressure = Math.max(0.15, trainFx.pressure - dt * 0.08);
       const ease = 1 - Math.exp(-dt * 6);
       cab.pressureNeedle.rotation.x +=

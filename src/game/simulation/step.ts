@@ -37,7 +37,7 @@ export function clickLayTrack(
   events: GameEvent[],
   rand: () => number = Math.random,
 ) {
-  const stats = deriveStats(state.levels);
+  const stats = deriveStats(state.levels, state.trainSet);
   const golden = rand() < stats.goldenChance;
   state.stats.clicks++;
   if (golden) state.stats.goldenSpikes++;
@@ -75,7 +75,7 @@ export function selectTrainSet(state: GameState, id: TrainSetId): boolean {
 
 /** Advance the world by dt seconds. */
 export function stepSim(state: GameState, dt: number, events: GameEvent[]) {
-  const stats = deriveStats(state.levels);
+  const stats = deriveStats(state.levels, state.trainSet);
 
   // Automatic track gang.
   state.autoLayCarry += stats.autoLayPerSec * dt;

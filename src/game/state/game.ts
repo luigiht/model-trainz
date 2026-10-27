@@ -43,6 +43,18 @@ export function onGameEvent(fn: Listener): () => void {
   return () => listeners.delete(fn);
 }
 
+const checkpointListeners = new Set<() => void>();
+/** Progress worth keeping right away: an upgrade or train set bought, a stop reached. */
+export function onCheckpoint(fn: () => void): () => void {
+  checkpointListeners.add(fn);
+  return () => checkpointListeners.delete(fn);
+}
+
+function checkpoint() {
+  writeSave(game.state);
+  for (const l of checkpointListeners) l();
+}
+
 export interface HudSnapshot {
   coins: number;
   laid: number;
@@ -72,7 +84,7 @@ function snapshot(): HudSnapshot {
     piecesToNext: Math.max(0, Math.ceil((to - head) / PIECE_LENGTH)),
     legProgress: Math.min(1, Math.max(0, (head - from) / (to - from))),
     levels: { ...s.levels },
-    stats: deriveStats(s.levels),
+    stats: deriveStats(s.levels, s.trainSet),
     clicks: s.stats.clicks,
     distance: s.stats.distance,
     trainSet: s.trainSet,
@@ -84,6 +96,7 @@ export const useHud = create<HudSnapshot>()(() => snapshot());
 
 const events: GameEvent[] = [];
 function flush() {
+  const arrived = events.some((e) => e.type === "arrive");
   for (const e of events) {
     if (e.type === "laid") {
       game.recentLays.push({
@@ -96,6 +109,7 @@ function flush() {
     for (const l of listeners) l(e);
   }
   events.length = 0;
+  if (arrived) checkpoint();
 }
 
 let accumulator = 0;
@@ -157,7 +171,7 @@ export function playerBuy(id: UpgradeId): boolean {
   const ok = buyUpgrade(game.state, id);
   if (ok) {
     useHud.setState(snapshot());
-    writeSave(game.state);
+    checkpoint();
   }
   return ok;
 }
@@ -169,7 +183,7 @@ export function playerDepot(id: TrainSetId): boolean {
     : buyTrainSet(game.state, id);
   if (ok) {
     useHud.setState(snapshot());
-    writeSave(game.state);
+    checkpoint();
   }
   return ok;
 }

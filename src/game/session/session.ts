@@ -4,12 +4,14 @@
  */
 import { create } from "zustand";
 import { deserializeSave, readSave, serializeSave, setSaveSlot, writeSave } from "@/game/save/save";
-import { game, initGame, loadGame, setRunning } from "@/game/state/game";
+import { game, initGame, loadGame, onCheckpoint, setRunning } from "@/game/state/game";
 import { cleanPlayerName, generateGameId, normalizeGameId } from "@/lib/gameId";
 import { VERSION_PARAM, reloadIfOutdated } from "./version";
 
 const PROFILE_KEY = "mt-profile";
 const SYNC_MS = 60_000;
+/** A purchase or a stop reached is pushed this soon (later ones in the window ride along). */
+const CHECKPOINT_SYNC_MS = 3000;
 const FETCH_TIMEOUT_MS = 8000;
 
 export type SyncStatus = "idle" | "saving" | "saved" | "offline";
@@ -206,10 +208,18 @@ export async function submitProfile(
 }
 
 let syncing = false;
+let checkpointTimer: number | undefined;
 function startSync() {
   if (syncing) return;
   syncing = true;
   window.setInterval(() => void syncNow(), SYNC_MS);
+  onCheckpoint(() => {
+    if (checkpointTimer !== undefined) return;
+    checkpointTimer = window.setTimeout(() => {
+      checkpointTimer = undefined;
+      void syncNow();
+    }, CHECKPOINT_SYNC_MS);
+  });
   const flush = () => void syncNow(true);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flush();

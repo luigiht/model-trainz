@@ -1,5 +1,6 @@
 /** Pure economy formulas. */
 import { UPGRADE_BY_ID, UPGRADES, type UpgradeId } from "@/game/content/upgrades";
+import { TRAIN_SET_BY_ID, type TrainSetId } from "@/game/content/trainSets";
 
 export type UpgradeLevels = Record<UpgradeId, number>;
 
@@ -37,13 +38,14 @@ export interface DerivedStats {
 export const BASE_SPEED = 6; // world units per second
 export const GOLDEN_MULTIPLIER = 20;
 
-export function deriveStats(l: UpgradeLevels): DerivedStats {
+export function deriveStats(l: UpgradeLevels, trainSet: TrainSetId): DerivedStats {
+  const set = TRAIN_SET_BY_ID[trainSet];
   return {
     piecesPerClick: 1 + l.shovel,
     autoLayPerSec: 0.5 * l.gang,
     coinsPerPiece: 1 + l.steel,
-    maxSpeed: BASE_SPEED * (1 + 0.2 * l.boiler),
-    fareMultiplier: (1 + 0.25 * l.fares) * (1 + 0.5 * l.carriage),
+    maxSpeed: BASE_SPEED * (1 + 0.2 * l.boiler) * set.speed,
+    fareMultiplier: (1 + 0.25 * l.fares) * (1 + 0.5 * l.carriage) * set.fares,
     carriages: 1 + l.carriage,
     goldenChance: 0.02 * l.golden,
   };

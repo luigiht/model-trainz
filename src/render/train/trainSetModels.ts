@@ -1,7 +1,7 @@
 /** Maps each Depot train set to its locomotive and coach builders. */
 import type { TrainSetId } from "@/game/content/trainSets";
 import { buildCarriage, buildLocomotive, type VehicleModel } from "./trainModels";
-import { buildExpressCoach, buildExpressLoco } from "./expressDiesel";
+import { buildEvergreenCoach, buildEvergreenLoco } from "./evergreenDiesel";
 
 interface TrainSetBuilders {
   loco: () => VehicleModel;
@@ -10,5 +10,5 @@ interface TrainSetBuilders {
 
 export const TRAIN_SET_MODELS: Record<TrainSetId, TrainSetBuilders> = {
   heritage: { loco: buildLocomotive, coach: buildCarriage },
-  express37: { loco: buildExpressLoco, coach: buildExpressCoach },
+  evergreen: { loco: buildEvergreenLoco, coach: buildEvergreenCoach },
 };

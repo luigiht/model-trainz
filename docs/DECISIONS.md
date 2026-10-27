@@ -144,8 +144,11 @@ Newest at the bottom. Each entry: decision — why.
   read it). Without `SUPABASE_URL`/`SUPABASE_SECRET_KEY` it uses files in `.data/games/` locally,
   and on Vercel online saves report unavailable (503) while play continues offline.
 - **Sync:** on entering, the newer of the local and server copies wins; the save is pushed every
-  60 s and when the page is hidden (`keepalive`). If the server was unreachable and there was no
-  local copy, nothing is pushed until the server copy has been checked (never overwrite unseen).
+  60 s, when the page is hidden (`keepalive`), and ~3 s after a checkpoint (an upgrade or train set
+  bought, a stop reached; `onCheckpoint` in `game.ts`). The save holds the whole `GameState`:
+  map seed, track laid, current stop, coins, upgrade levels and train sets. If the server was
+  unreachable and there was no local copy, nothing is pushed until the server copy has been
+  checked (never overwrite unseen).
 - **Not yet:** rate limiting on the API.
 
 ```sql
@@ -176,32 +179,45 @@ grant select, insert, update on public.games to service_role;
 
 ## Depot (train sets)
 
-- **Hidden for now.** `DEPOT_ENABLED = false` (in `trainSets.ts`) removes the Depot tab and always
-  runs the heritage set. Everything else (state, saves, models, tests) is kept; flip the flag to
-  bring it back. Saves keep their owned/selected sets while hidden.
-- **Cosmetic only.** Train sets change the look (and exhaust) but not speed or fares, so the Depot
-  is a coin sink that never invalidates the upgrade economy.
-- **Catalogue trimmed to one set.** The City Loop, High Speed 125 and Alpine Panorama sets were
-  removed; only the Highland Express (id `express37`, $50K) remains on sale. Saves that owned a
-  removed set drop it via the sanitizer and fall back to Heritage Steam (no refund).
+- **Back on, one new set.** The Depot tab is shown again (the `DEPOT_ENABLED` flag is gone). The
+  Highland Express (`express37`) was scrapped and replaced by the **Evergreen Express**
+  (`evergreen`, $50K): a double-cab mainline diesel and modern coaches painted in the heritage
+  colours (loco green, cream, maroon, gold lining, red buffer beams and wheel centres, warm lit
+  windows) so it belongs with the steam set. Saves that owned `express37` drop it via the sanitizer
+  and fall back to Heritage Steam (no refund).
+- **Sets are upgrades.** Each `TrainSetDef` has `speed` and `fares` multipliers applied in
+  `deriveStats()` on top of the upgrade levels, only while that set is in service. The Evergreen
+  Express gives ×1.5 top speed and ×1.5 fares, so its $50K price pays back; Heritage Steam is ×1.
 - **State:** `trainSet` + `ownedSets` on `GameState`; pure `buyTrainSet` / `selectTrainSet` in
   `step.ts`. No save-version bump: the loader's defensive merge fills the new fields, and it drops
   unknown or unowned set ids (falls back to Heritage Steam).
-- **Models:** the Highland Express lives in `expressDiesel.ts` on shared `modernParts.ts`,
-  `bogies.ts` and `cabs.ts`, mapped in `trainSetModels.ts`. Liveries are inspired by real trains
-  but carry no names or logos.
+- **Models:** the Evergreen Express lives in `evergreenDiesel.ts` on shared `modernParts.ts`,
+  `bogies.ts` and `cabs.ts`, mapped in `trainSetModels.ts`. No names or logos; the crest is a plain
+  brass roundel.
+- **Two-shell loco body.** The diesel's body is two lofts: a full-length lower shell up to the
+  waist and a cab-top shell above it. The cab top's rings shrink about the waist (not the floor),
+  so the windscreens rake back over a vertical nose while the waistband wraps round the front.
 - **Cab view:** the steam engine has its own footplate (`cabInterior.ts`); the diesel has a cab
   built by `buildCab()` — an inset, inward-facing copy of the exterior loft with the glazed faces
-  left open, plus a desk with live gauges.
+  left open. Inside: the driver's desk (brake and power handles that move with the train,
+  reverser, buttons, switches) rising to an instrument binnacle (live speedometer and ammeter,
+  warning lights, AWS indicator) placed so it fills the bottom of the default cab view; the
+  second man's desk (radio, logbook, mug of tea); two maroon seats; framed side windows, sun
+  visors, the engine-room door and an extinguisher. Desks are side profiles extruded with
+  `Builder.prism()`; the static parts merge per material, only needles and handles stay separate.
+  Interior surfaces glow slightly (the cab sits in the body's shadow) and don't cast shadows.
+- **Nothing through the cab.** The lower shell's top is left out under the cab tops (it was a
+  floor at chest height inside the cab), and grab rails are two short pieces, not one box through
+  the body.
 - **Exhaust:** `trainFx.exhaust` is `steam` or `diesel` (smaller grey puffs).
 - **Lofted, painted bodies (v2).** Modern sets are no longer stacked boxes: each body is one
   `loft()` — a cross-section profile (tumblehome, curved roof) skinned through stations along x,
   with scaled stations forming tapered noses and rounded ends. Each flat face is coloured by a
   livery rule via vertex colours, so stripes, windows and windscreens follow the curvature and stay
-  flush. Lengths are now per vehicle (`length` / `halfBase` on `VehicleModel`): modern locos 7–8,
-  coaches 9–9.6 (≈ 4–5× the width, closer to real proportions); the heritage set is unchanged.
-- **Matching scale.** The Highland Express is modelled at those sizes, then `scaleVehicle()` scales
-  it ×1.15 about the railhead so its roof and nose line up with the heritage cab roof and boiler
+  flush. Lengths are now per vehicle (`length` / `halfBase` on `VehicleModel`): modern locos ~8,
+  coaches 9.6 (≈ 4–5× the width, closer to real proportions); the heritage set is unchanged.
+- **Matching scale.** The modern set is modelled at those sizes, then `scaleVehicle()` scales
+  it ×1.15 about the railhead so its roof lines up with the heritage cab roof
   (it read as smaller). Wheels keep the track gauge and their rolling radius; cab eye, exhaust,
   length and bogie spacing are scaled to match.
 - **Draw calls:** `Builder.build()` merges every static mesh per material, so the extra detail

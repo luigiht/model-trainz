@@ -162,7 +162,6 @@ export const it: Messages = {
     },
   },
   depot: {
-    intro: "I nuovi treni hanno un aspetto diverso, ma viaggiano e guadagnano allo stesso modo.",
     inService: "In servizio",
     use: "Usa",
   },
@@ -172,10 +171,10 @@ export const it: Messages = {
       detail: "Locomotiva a vapore + carrozze in teak",
       flavor: "Dove tutto è cominciato.",
     },
-    express37: {
-      name: "Espresso delle Highlands",
-      detail: "Diesel Tipo 3 + carrozze espresso",
-      flavor: "Rumoroso come un trattore, morbido come un sogno.",
+    evergreen: {
+      name: "Espresso Sempreverde",
+      detail: "+50% velocità, +50% tariffe",
+      flavor: "Tutto il fascino, niente carbone.",
     },
   },
   view: {

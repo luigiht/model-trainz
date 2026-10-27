@@ -171,7 +171,6 @@ export const en = {
     },
   } satisfies Record<UpgradeId, ItemText>,
   depot: {
-    intro: "New train sets look different but run and earn the same.",
     inService: "In service",
     use: "Use",
   },
@@ -181,10 +180,10 @@ export const en = {
       detail: "Steam tank engine + teak coaches",
       flavor: "Where it all began.",
     },
-    express37: {
-      name: "Highland Express",
-      detail: "Type 3 diesel + express coaches",
-      flavor: "Thrashes like a tractor, cruises like a dream.",
+    evergreen: {
+      name: "Evergreen Express",
+      detail: "+50% train speed, +50% fares",
+      flavor: "All the charm, none of the coal.",
     },
   } satisfies Record<TrainSetId, ItemText>,
   view: {
