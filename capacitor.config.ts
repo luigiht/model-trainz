@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   webDir: "out",
   backgroundColor: "#1b1712",
   plugins: {
-    SystemBars: { hidden: true, initialViewportFitValueHint: "cover" },
+    SystemBars: { hidden: true, style: "LIGHT", initialViewportFitValueHint: "cover" },
   },
 };
 
