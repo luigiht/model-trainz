@@ -240,3 +240,38 @@ grant select, insert, update on public.games to service_role;
   overlay, and number formats (`$1.25K`, `0.5`/s stay game-wide, as in the HUD).
 - **Fonts:** the body font (EAS VHS) and Silkscreen's latin subset cover the accented letters and
   `¡ ¿` used; avoid characters outside Latin-1 (e.g. en dash) in `font-body`/`font-pixel` text.
+
+## iOS and Android apps (Capacitor)
+
+- **Capacitor around a bundled build.** The apps wrap a static export of the same Next.js app
+  (`MOBILE=1 next build` → `out/`, then `cap sync`). The website build is unchanged. Not chosen:
+  pointing the app at the live site (`server.url`), which risks App Store rejection as a website
+  wrapper (guideline 4.2) and can't start offline; React Native, which would mean rewriting the
+  HUD and the worker-based terrain.
+- **No server in the app.** In the mobile build `pageExtensions: ["tsx"]` leaves out the `.ts`
+  route handlers (`/api/games/[id]`, `/api/version`), which a static export can't contain;
+  `headers()` is website-only (unsupported in an export) and `next/image` is unoptimized.
+- **API origin.** `NEXT_PUBLIC_API_ORIGIN` is empty on the website (same-origin requests) and the
+  deployed site in the app (`API_ORIGIN`, default `https://model-trainz.luigiht.com`); requests go
+  through `apiUrl()` in `session/api.ts`.
+- **CORS** on `/api/games/[id]` (`server/appCors.ts`) allows only the app origins:
+  `capacitor://localhost` (iOS) and `https://localhost` (Android), with an `OPTIONS` preflight for
+  the JSON `PUT`. It isn't a security boundary: the Game ID stays the only credential.
+- **No latest-build refresh in the app** (`IN_APP`): its build ships in the bundle and is updated
+  through the stores. The Game panel drops the address-bar sentence (`explainerApp`).
+- **Safe areas.** `viewport-fit=cover`; the HUD (`safe-p-3`), the landscape shop drawer and the
+  start screen pad with `env(safe-area-inset-*)`, which also helps the website on notched phones.
+  System bars are hidden for a full-screen game; Android's default `insetsHandling: "css"` keeps
+  the insets right on older WebViews.
+- **Native projects are committed** (`ios/` with Swift Package Manager, no CocoaPods; `android/`);
+  the copied web assets are git-ignored. App ID `com.luigiht.modeltrainz`.
+- **Android Gradle plugin 9.5 / Gradle 9.8** (Android Studio's upgrade assistant; Capacitor 8's
+  template ships 8.13 / 8.14). The assistant's compatibility flags in `gradle.properties` keep the
+  old defaults; AGP 9 rejects `proguard-android.txt`, so the app uses `proguard-android-optimize.txt`
+  like Capacitor's own module.
+- **Icons and splash screens** are generated into `ios/` and `android/` from the images in
+  `assets/` with `npx @capacitor/assets generate --ios --android` (`pnpm dlx` skips sharp's
+  install script, so it fails). The full-bleed splash art adds ~20 MB to the APK.
+- **Not yet:** signing and store listings. iOS may clear the web view's `localStorage` under
+  storage pressure; online saves cover it, but `@capacitor/preferences` would keep the profile
+  safer.

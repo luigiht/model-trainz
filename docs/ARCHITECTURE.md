@@ -2,6 +2,7 @@
 
 ```
 src/app/                    Next.js shell (server components): layout, page → <GameRoot/>
+src/app/api/                games/[id] (save by Game ID, CORS for the apps), version (deployed build)
 src/components/game/        GameRoot (input + event wiring), GameCanvas (scene), GameDriver (sim tick),
                             Terrain, Water, Track, Stations, Train, Steam, CameraRig, RenderProbe,
                             PostEffects, trainFx (mutable fx state)
@@ -12,13 +13,23 @@ src/game/economy/           cost curves + derived stats (pure)
 src/game/simulation/        GameState, rules (legs/stations/fares), route (arc-length curve), step (pure)
 src/game/save/              versioned save envelope, checksum, backup
 src/game/state/             game.ts (runtime owner of the sim + HUD snapshot store), settingsStore
+src/game/session/           player + Game ID, online save sync, API origin (api.ts), version check
+src/server/                 gameStore (Supabase or local files), appCors
 src/render/world/           terrain (low-poly chunk builder), TerrainChunkManager, stationModel
 src/render/train/           trainModels (loco + carriages from primitives), cabInterior (first-person cab)
 src/render/workers/         chunk.worker, ChunkWorkerPool, buildChunk (shared with fallback)
 src/render/effects/         quality tiers, QualityGovernor
 src/audio/sfx.ts            procedural sound effects
 src/i18n/                   locales (detection), messages/{en,es,it} dictionaries, i18n.ts hooks
+ios/, android/              Capacitor native projects around the static export in out/
 ```
+
+## Builds
+
+- **Website** (`pnpm build`): server build with the API routes, deployed on Vercel.
+- **iOS/Android apps** (`pnpm mobile:build`): `MOBILE=1` switches `next.config.ts` to a static
+  export without route handlers, with `NEXT_PUBLIC_API_ORIGIN` pointing at the website;
+  `cap sync` copies `out/` into `ios/` and `android/`.
 
 ## Data flow
 

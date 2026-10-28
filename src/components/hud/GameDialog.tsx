@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { IN_APP } from "@/game/session/api";
 import { useSession } from "@/game/session/session";
 import { useMessages } from "@/i18n/i18n";
 
@@ -87,7 +88,9 @@ export function GameDialog({ open, onClose }: { open: boolean; onClose: () => vo
           {copied ? t.gameDialog.copiedAnnouncement : ""}
         </span>
 
-        <p className="text-sm text-amber-100/80">{t.gameDialog.explainer}</p>
+        <p className="text-sm text-amber-100/80">
+          {IN_APP ? t.gameDialog.explainerApp : t.gameDialog.explainer}
+        </p>
         <p role="status" className="text-xs text-amber-100/60">
           {t.gameDialog.sync[sync]}
         </p>

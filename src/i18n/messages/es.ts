@@ -79,6 +79,8 @@ export const es: Messages = {
     copiedAnnouncement: "ID de partida copiado al portapapeles.",
     explainer:
       "Guarda este ID de partida para continuarla en cualquier dispositivo: escríbelo en la pantalla de inicio. La barra de direcciones también lo incluye, así que un marcador te trae de vuelta directamente. Cualquiera que tenga el ID puede jugar esta partida.",
+    explainerApp:
+      "Guarda este ID de partida para continuarla en cualquier dispositivo: escríbelo en la pantalla de inicio. Cualquiera que tenga el ID puede jugar esta partida.",
     sync: {
       idle: "Aún no se ha guardado en línea.",
       saving: "Guardando en línea…",

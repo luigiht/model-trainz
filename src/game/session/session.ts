@@ -6,6 +6,7 @@ import { create } from "zustand";
 import { deserializeSave, readSave, serializeSave, setSaveSlot, writeSave } from "@/game/save/save";
 import { game, initGame, loadGame, onCheckpoint, setRunning } from "@/game/state/game";
 import { cleanPlayerName, generateGameId, normalizeGameId } from "@/lib/gameId";
+import { apiUrl } from "./api";
 import { VERSION_PARAM, reloadIfOutdated } from "./version";
 
 const PROFILE_KEY = "mt-profile";
@@ -65,7 +66,7 @@ function writeProfile(p: Profile) {
   }
 }
 
-const gameUrl = (id: string) => `/api/games/${encodeURIComponent(id)}`;
+const gameUrl = (id: string) => apiUrl(`/api/games/${encodeURIComponent(id)}`);
 
 /** The server's copy of a game: null if there is none, "offline" if the server can't be reached. */
 async function fetchGame(

@@ -260,7 +260,7 @@ export function GameRoot() {
         <GameCanvas onReady={onReady} reducedMotion={reducedMotion} />
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 p-3">
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-3 safe-p-3">
         <div className="flex items-start justify-between gap-3">
           <div className="pointer-events-auto min-w-0 max-w-[22rem] flex-1">
             <StatusPanel />
@@ -274,7 +274,7 @@ export function GameRoot() {
           <Toasts />
           {/* Desktop: centred on screen, the height cap keeps it clear of the top and bottom bars.
               Compact landscape: docked to the right edge below the icon buttons. */}
-          <div className="pointer-events-auto absolute right-3 top-1/2 flex max-h-[calc(100dvh-9rem)] -translate-y-1/2 compact:z-10 compact:max-h-none compact:translate-y-0 compact:portrait:inset-y-0 compact:portrait:-right-3 compact:landscape:top-[4.25rem] compact:landscape:bottom-3 compact:landscape:right-0">
+          <div className="pointer-events-auto absolute right-3 top-1/2 flex max-h-[calc(100dvh-9rem)] -translate-y-1/2 compact:z-10 compact:max-h-none compact:translate-y-0 compact:portrait:inset-y-0 compact:portrait:-right-3 compact:landscape:top-[4.25rem] compact:landscape:bottom-[max(0.75rem,env(safe-area-inset-bottom))] compact:landscape:right-[env(safe-area-inset-right)]">
             <UpgradeShop />
           </div>
         </div>

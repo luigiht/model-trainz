@@ -20,6 +20,14 @@
   }
 }
 
+/* HUD padding that also clears notches, rounded corners and the home indicator. */
+@utility safe-p-3 {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+}
+
 :root {
   --iron: #24201b;
   --brass: #c9a24a;

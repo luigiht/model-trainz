@@ -75,7 +75,7 @@ export function LoadingScreen({
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/75 to-transparent"
       />
-      <div className="relative flex h-full flex-col items-center justify-between gap-4 px-6 pb-4 pt-[9vh] [@media(max-height:500px)]:pt-3">
+      <div className="relative flex h-full flex-col items-center justify-between gap-4 px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[9vh] [@media(max-height:500px)]:pt-3">
         <h1 className="w-[min(82vw,30rem)] [@media(max-height:500px)]:w-56">
           <Image
             src={logo}

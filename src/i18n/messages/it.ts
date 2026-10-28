@@ -79,6 +79,8 @@ export const it: Messages = {
     copiedAnnouncement: "ID partita copiato negli appunti.",
     explainer:
       "Conserva questo ID partita per continuare su qualsiasi dispositivo: inseriscilo nella schermata iniziale. Lo contiene anche la barra degli indirizzi, quindi un segnalibro ti riporta subito qui. Chiunque abbia l'ID può giocare questa partita.",
+    explainerApp:
+      "Conserva questo ID partita per continuare su qualsiasi dispositivo: inseriscilo nella schermata iniziale. Chiunque abbia l'ID può giocare questa partita.",
     sync: {
       idle: "Non ancora salvata online.",
       saving: "Salvataggio online…",

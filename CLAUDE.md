@@ -35,6 +35,7 @@ The full design brief lives in `docs/BRIEF.md`; the milestone plan in `docs/PLAN
 - `pnpm dev` — dev server (http://localhost:3000)
 - `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm build`
 - `pnpm test:e2e` — Playwright smoke tests (starts its own server) and screenshots to `test-results/`
+- `pnpm mobile:build` — static export (`MOBILE=1`) synced into the Capacitor `ios/` and `android/` projects
 
 ## Layout
 
@@ -44,3 +45,4 @@ The full design brief lives in `docs/BRIEF.md`; the milestone plan in `docs/PLAN
 - `src/i18n/**` — UI text in English, Spanish and Italian. Add new strings to `messages/en.ts` first,
   then `es.ts` / `it.ts`; never hard-code player-facing text in components.
 - `tests/unit` (Vitest), `tests/e2e` (Playwright).
+- `ios/`, `android/` — Capacitor native projects (the iOS/Android apps); see `docs/DECISIONS.md`.

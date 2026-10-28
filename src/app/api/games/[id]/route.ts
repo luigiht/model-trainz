@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { deserializeSave } from "@/game/save/save";
 import { cleanPlayerName, normalizeGameId } from "@/lib/gameId";
+import { allowApp, preflight } from "@/server/appCors";
 import { StoreUnavailableError, getGame, putGame } from "@/server/gameStore";
 
 /** Saves are a few KB; anything much bigger isn't one. */
 const MAX_BODY_BYTES = 64 * 1024;
 
 type Context = { params: Promise<{ id: string }> };
+type Handler = (req: Request, ctx: Context) => Promise<Response>;
+
+/** Lets the iOS/Android app read the response from its own origin. */
+const forApp =
+  (handler: Handler): Handler =>
+  async (req, ctx) =>
+    allowApp(req, await handler(req, ctx));
+
+export const OPTIONS = (req: Request) => preflight(req, "GET, PUT");
 
 const reply = (body: object, status = 200) =>
   NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -19,7 +29,7 @@ function storeFailure(e: unknown) {
 }
 
 /** Load a game by ID (anyone with the ID can continue it: the ID is the share link). */
-export async function GET(_req: Request, { params }: Context) {
+export const GET = forApp(async (_req, { params }) => {
   const id = normalizeGameId((await params).id);
   if (!id) return reply({ error: "Invalid Game ID." }, 400);
   try {
@@ -29,10 +39,10 @@ export async function GET(_req: Request, { params }: Context) {
   } catch (e) {
     return storeFailure(e);
   }
-}
+});
 
 /** Create or update a game: `{ name, save }`, where `save` must be a valid save envelope. */
-export async function PUT(req: Request, { params }: Context) {
+export const PUT = forApp(async (req, { params }) => {
   const id = normalizeGameId((await params).id);
   if (!id) return reply({ error: "Invalid Game ID." }, 400);
   if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES)
@@ -58,4 +68,4 @@ export async function PUT(req: Request, { params }: Context) {
   } catch (e) {
     return storeFailure(e);
   }
-}
+});

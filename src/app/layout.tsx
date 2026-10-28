@@ -10,11 +10,11 @@ const body = localFont({ src: "./fonts/body.ttf", variable: "--font-body-ui" });
 
 const description = "A cozy low-poly train clicker: lay track, run your railway, earn fares.";
 
-// NEXT_PUBLIC_SITE_URL for a custom domain; otherwise Vercel's production URL.
+// Not VERCEL_PROJECT_PRODUCTION_URL: it picks model-trainz.vercel.app, the shorter domain.
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  (process.env.NODE_ENV === "production"
+    ? "https://model-trainz.luigiht.com"
     : "http://localhost:3000");
 
 export const metadata: Metadata = {
@@ -28,6 +28,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#1b1712",
 };
 

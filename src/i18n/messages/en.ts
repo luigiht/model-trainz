@@ -89,6 +89,9 @@ export const en = {
     copiedAnnouncement: "Game ID copied to the clipboard.",
     explainer:
       "Keep this Game ID to continue this game on any device: enter it on the start screen. The address bar also includes it, so a bookmark brings you straight back. Anyone with the ID can play this game.",
+    /** The iOS/Android app has no address bar. */
+    explainerApp:
+      "Keep this Game ID to continue this game on any device: enter it on the start screen. Anyone with the ID can play this game.",
     sync: {
       idle: "Not saved online yet.",
       saving: "Saving online…",

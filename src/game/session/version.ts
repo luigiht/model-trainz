@@ -1,4 +1,5 @@
 /** Keeps players who haven't entered a name yet on the latest deployed build. */
+import { IN_APP } from "./api";
 
 const RUNNING = process.env.NEXT_PUBLIC_APP_VERSION;
 /** The build we last reloaded for, so a stale cache can't cause a reload loop. */
@@ -18,6 +19,8 @@ async function deployedVersion(): Promise<string | null> {
 
 /** Hard-refreshes onto the deployed build if this tab runs an older one. True if reloading. */
 export async function reloadIfOutdated(): Promise<boolean> {
+  // The app's build ships in its bundle and is updated through the stores.
+  if (IN_APP) return false;
   const latest = await deployedVersion();
   if (!latest || latest === RUNNING) return false;
   try {
