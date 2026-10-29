@@ -1,0 +1,21 @@
+RELEASE NOTES
+
+Newest first. Each release has store-ready "What's new" text (Google Play allows 500 characters per language; the App Store 4,000) followed by fuller notes for reference.
+
+
+1.0 (build 1) - 29 October 2026
+
+First release on Google Play and the App Store. Android versionName 1.0 / versionCode 1; iOS MARKETING_VERSION 1.0 / CURRENT_PROJECT_VERSION 1.
+
+What's new (store text):
+
+All aboard! The first release of Model Trainz: lay track, run your little steam train from station to station and grow a cozy railway. Upgrade your shovels, hire a track gang, add carriages and save up for the Evergreen Express. Your game saves online with a Game ID, so you can continue on any device. No ads, no in-app purchases.
+
+In this release:
+
+- Lay track to reach each station and earn fares on arrival.
+- Seven upgrades and two train sets at the Depot.
+- Diorama and cab views.
+- Online saves: continue on any device with your Game ID.
+- Privacy policy and in-game "Delete this game".
+- English, Spanish and Italian; reduced motion and keyboard controls.

@@ -92,6 +92,48 @@ Bundle(s) / APK(s) → Build APK(s)**); click **locate** in the notification to 
   testing, but Google Play needs a release build signed with your own upload key. An APK built on
   another computer can't update this one: uninstall the app first.
 
+## 6. Build an app bundle for Google Play
+
+Google Play takes an Android App Bundle (`.aab`) signed with your **upload key**. Google then signs
+the app for users with its own key (Play App Signing), so a lost upload key can be reset through
+Play Console support. Keep a backup anyway: a reset takes a support request and a few days.
+
+1. **Create the upload key (once).** Keep it outside the repository, and back it up somewhere safe
+   (a password manager or encrypted drive):
+
+   ```bash
+   mkdir -p ~/.android-keys
+   keytool -genkeypair -v -keystore ~/.android-keys/model-trainz-upload.jks \
+     -alias upload -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+   `keytool` asks for a password and your name/organisation; it's in Android Studio's JDK
+   (`$JAVA_HOME/bin/keytool`, step 1.4).
+
+2. **Tell Gradle where it is.** Create `android/keystore.properties` (git-ignored, never commit it):
+
+   ```properties
+   storeFile=/Users/YOU/.android-keys/model-trainz-upload.jks
+   storePassword=the password you chose
+   keyAlias=upload
+   keyPassword=the password you chose
+   ```
+
+3. **Bump the version** for every upload after the first: `versionCode` (must go up by at least 1)
+   and `versionName` in `android/app/build.gradle`.
+
+4. **Build it:**
+
+   ```bash
+   pnpm mobile:build
+   cd android
+   ./gradlew bundleRelease
+   ```
+
+   The bundle is `android/app/build/outputs/bundle/release/app-release.aab`. Upload it in Play
+   Console under **Test and release** (start with internal or closed testing). Without
+   `keystore.properties` the bundle comes out unsigned and Play Console rejects it.
+
 ## What to test
 
 - **Start:** enter a name and press **Play**; next launch should show the **Continue** card.

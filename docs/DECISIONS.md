@@ -269,8 +269,9 @@ grant select, insert, update on public.games to service_role;
   start screen pad with `env(safe-area-inset-*)`, which also helps the website on notched phones.
   System bars are hidden for a full-screen game; Android's default `insetsHandling: "css"` keeps
   the insets right on older WebViews. When they show (launch, edge swipe) their icons are always
-  black: SystemBars `style: "LIGHT"` plus `windowLight{Status,Navigation}Bar` in the Android
-  launch and app themes, so the device's dark mode doesn't flip them to white.
+  white, to read on the game's dark colours: SystemBars `style: "DARK"` plus
+  `windowLight{Status,Navigation}Bar=false` in the Android launch and app themes, so the device's
+  light mode doesn't flip them to black.
 - **Native projects are committed** (`ios/` with Swift Package Manager, no CocoaPods; `android/`);
   the copied web assets are git-ignored. App ID `com.luigiht.modeltrainz`.
 - **Android Gradle plugin 9.5 / Gradle 9.8** (Android Studio's upgrade assistant; Capacitor 8's

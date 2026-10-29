@@ -8,6 +8,7 @@ import { useSession } from "@/game/session/session";
 import { useMessages } from "@/i18n/i18n";
 import { Credit } from "./Credit";
 import { LanguageSelect } from "./LanguageSelect";
+import { PrivacyLink } from "./PrivacyLink";
 import { ProfileForm } from "./ProfileForm";
 import { ResumeCard } from "./ResumeCard";
 
@@ -101,6 +102,7 @@ export function LoadingScreen({
           )}
           <footer className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-amber-100/75">
             <Credit className="text-center text-amber-100/75" />
+            <PrivacyLink className="text-amber-100/75" />
             <LanguageSelect variant="link" testId="start-language" />
           </footer>
         </div>
