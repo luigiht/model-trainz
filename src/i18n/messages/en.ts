@@ -98,6 +98,14 @@ export const en = {
       saved: "Saved online.",
       offline: "Can't reach the server right now, so progress is saved on this device for now.",
     } satisfies Record<SyncStatus, string>,
+    delete: {
+      button: "Delete this game",
+      confirm:
+        "Delete this game, your name and its Game ID from the server and this device? This can't be undone.",
+      yes: "Yes, delete",
+      deleting: "Deleting…",
+      failed: "Couldn't reach the server, so nothing was deleted. Please try again later.",
+    },
   },
   settings: {
     title: "Settings",
@@ -194,6 +202,59 @@ export const en = {
     diorama: "Diorama",
     cab: "Cab",
   } satisfies Record<CameraMode | "label", string>,
+  privacy: {
+    link: "Privacy Policy",
+    title: "Privacy Policy",
+    updated: "Last updated: 29 October 2026",
+    back: "Back to the game",
+    sections: [
+      {
+        heading: "Who we are",
+        body: [
+          "Model Trainz is a game made by Luis Hermosilla. This policy covers the website (model-trainz.luigiht.com) and the iOS and Android apps.",
+        ],
+      },
+      {
+        heading: "What the game stores",
+        body: [
+          "The name you type when you start (a nickname is fine), the Game ID the game creates, and your progress: track laid, coins, upgrades and trains.",
+          "Your settings (language, sound, graphics) stay on your device.",
+          "Nothing else: no email, accounts, location, contacts or device identifiers. There are no ads, no analytics and no tracking.",
+        ],
+      },
+      {
+        heading: "Why",
+        body: [
+          "Only to save your game online, so you can continue it on any device with your Game ID. Your name is shown to you and to anyone you give your Game ID to; there are no public lists or leaderboards.",
+        ],
+      },
+      {
+        heading: "Where it's kept",
+        body: [
+          "On your device, and on the game's server (hosted by Vercel, with the database at Supabase). It travels over an encrypted connection (HTTPS). It is never sold or shared with anyone else.",
+          "Like any website, these hosts may briefly keep technical logs (such as IP addresses) to keep the service secure and running.",
+        ],
+      },
+      {
+        heading: "How long, and deleting it",
+        body: [
+          "Online saves are kept until you delete them. To delete your game from the server and your device, open Game in the game and choose \"Delete this game\". This removes your name, Game ID and progress for good.",
+        ],
+      },
+      {
+        heading: "Children",
+        body: [
+          "The game doesn't ask for anyone's real name or contact details, and is suitable for all ages. Parents can delete a child's game as described above, or by emailing us.",
+        ],
+      },
+      {
+        heading: "Changes",
+        body: ["If this policy changes, the new version will be posted here with a new date."],
+      },
+    ],
+    contactHeading: "Contact",
+    contact: "Questions, or can't open your game to delete it? Email us your Game ID at",
+  },
 };
 
 export type Messages = typeof en;

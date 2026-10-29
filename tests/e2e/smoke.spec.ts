@@ -43,6 +43,43 @@ test("the player's name and a shareable Game ID continue the game elsewhere", as
   await other.close();
 });
 
+test("a player can delete their game from the server and this device", async ({
+  page,
+  request,
+}) => {
+  await ready(page, "Ada");
+  await page.getByTestId("game").click();
+  const dialog = page.getByTestId("game-dialog");
+  await expect(dialog).toContainText("Saved online.");
+  const id = (await page.getByTestId("game-id").textContent()) ?? "";
+  await expect(dialog.getByTestId("privacy-link")).toHaveAttribute("href", "/privacy");
+  await dialog.getByTestId("delete-game").click();
+  await page.screenshot({ path: "test-results/screenshots/delete-game.png" });
+  await dialog.getByTestId("delete-game-confirm").click();
+  // Back to a first visit: the name form, nothing remembered, nothing on the server.
+  await expect(page.getByTestId("profile-name")).toHaveValue("");
+  await expect(page).not.toHaveURL(/game=/);
+  expect((await request.get(`/api/games/${id}`)).status()).toBe(404);
+  const keys = await page.evaluate(() => Object.keys(localStorage));
+  expect(keys.filter((k) => k.includes(id) || k === "mt-profile")).toEqual([]);
+});
+
+test("the privacy policy is linked from Settings and readable in the player's language", async ({
+  page,
+}) => {
+  await ready(page);
+  await page.getByTestId("settings").click();
+  const link = page.getByTestId("settings-dialog").getByTestId("privacy-link");
+  await expect(link).toHaveText("Privacy Policy");
+  await page.screenshot({ path: "test-results/screenshots/settings-privacy.png" });
+  await page.goto("/privacy");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Privacy Policy");
+  await expect(page.getByRole("link", { name: "luis.luigiht@gmail.com" })).toBeVisible();
+  await page.getByTestId("privacy-language").selectOption("es");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Política de privacidad");
+  await page.screenshot({ path: "test-results/screenshots/privacy-es.png", fullPage: true });
+});
+
 test("players without a name are hard-refreshed onto a newer build (once)", async ({ page }) => {
   await page.route("**/api/version", (r) => r.fulfill({ json: { version: "newer-build" } }));
   const reload = page.waitForRequest((req) => req.url().includes("v=newer-build"));

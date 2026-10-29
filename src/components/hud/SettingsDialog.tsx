@@ -7,6 +7,7 @@ import { useMessages } from "@/i18n/i18n";
 import { sfx } from "@/audio/sfx";
 import { Credit } from "./Credit";
 import { LanguageSelect } from "./LanguageSelect";
+import { PrivacyLink } from "./PrivacyLink";
 
 const QUALITY_OPTIONS: QualitySetting[] = ["auto", "low", "medium", "high", "ultra"];
 
@@ -158,8 +159,9 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           </table>
         </section>
 
-        <footer className="border-t border-white/10 pt-3">
+        <footer className="flex flex-col items-center gap-1 border-t border-white/10 pt-3">
           <Credit className="text-center" />
+          <PrivacyLink />
         </footer>
       </div>
     </dialog>

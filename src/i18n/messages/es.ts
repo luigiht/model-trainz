@@ -88,6 +88,15 @@ export const es: Messages = {
       offline:
         "Ahora mismo no se puede conectar con el servidor, así que por ahora el progreso se guarda en este dispositivo.",
     },
+    delete: {
+      button: "Borrar esta partida",
+      confirm:
+        "¿Borrar esta partida, tu nombre y su ID de partida del servidor y de este dispositivo? No se puede deshacer.",
+      yes: "Sí, borrar",
+      deleting: "Borrando…",
+      failed:
+        "No se pudo conectar con el servidor, así que no se ha borrado nada. Inténtalo de nuevo más tarde.",
+    },
   },
   settings: {
     title: "Ajustes",
@@ -183,5 +192,58 @@ export const es: Messages = {
     label: "Vista de cámara (V)",
     diorama: "Maqueta",
     cab: "Cabina",
+  },
+  privacy: {
+    link: "Política de privacidad",
+    title: "Política de privacidad",
+    updated: "Última actualización: 29 de octubre de 2026",
+    back: "Volver al juego",
+    sections: [
+      {
+        heading: "Quiénes somos",
+        body: [
+          "Model Trainz es un juego creado por Luis Hermosilla. Esta política cubre la web (model-trainz.luigiht.com) y las apps de iOS y Android.",
+        ],
+      },
+      {
+        heading: "Qué guarda el juego",
+        body: [
+          "El nombre que escribes al empezar (vale un apodo), el ID de partida que crea el juego y tu progreso: vía colocada, monedas, mejoras y trenes.",
+          "Tus ajustes (idioma, sonido, gráficos) se quedan en tu dispositivo.",
+          "Nada más: ni correo, ni cuentas, ni ubicación, ni contactos, ni identificadores del dispositivo. No hay anuncios, ni analíticas, ni seguimiento.",
+        ],
+      },
+      {
+        heading: "Para qué",
+        body: [
+          "Solo para guardar tu partida en línea, para que puedas continuarla en cualquier dispositivo con tu ID de partida. Tu nombre solo lo ves tú y quien tenga tu ID de partida; no hay listas públicas ni clasificaciones.",
+        ],
+      },
+      {
+        heading: "Dónde se guarda",
+        body: [
+          "En tu dispositivo y en el servidor del juego (alojado en Vercel, con la base de datos en Supabase). Viaja por una conexión cifrada (HTTPS). Nunca se vende ni se comparte con nadie más.",
+          "Como cualquier web, estos proveedores pueden guardar durante poco tiempo registros técnicos (como direcciones IP) para mantener el servicio seguro y en marcha.",
+        ],
+      },
+      {
+        heading: "Cuánto tiempo, y cómo borrarlo",
+        body: [
+          "Las partidas en línea se guardan hasta que las borras. Para borrar tu partida del servidor y de tu dispositivo, abre Partida en el juego y elige \"Borrar esta partida\". Así se eliminan para siempre tu nombre, tu ID de partida y tu progreso.",
+        ],
+      },
+      {
+        heading: "Menores",
+        body: [
+          "El juego no pide el nombre real ni datos de contacto de nadie, y es apto para todas las edades. Los padres pueden borrar la partida de un menor como se explica arriba, o escribiéndonos.",
+        ],
+      },
+      {
+        heading: "Cambios",
+        body: ["Si esta política cambia, la nueva versión se publicará aquí con una fecha nueva."],
+      },
+    ],
+    contactHeading: "Contacto",
+    contact: "¿Dudas, o no puedes abrir tu partida para borrarla? Escríbenos con tu ID de partida a",
   },
 };

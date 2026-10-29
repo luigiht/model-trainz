@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { deserializeSave } from "@/game/save/save";
 import { cleanPlayerName, normalizeGameId } from "@/lib/gameId";
 import { allowApp, preflight } from "@/server/appCors";
-import { StoreUnavailableError, getGame, putGame } from "@/server/gameStore";
+import { StoreUnavailableError, deleteGame, getGame, putGame } from "@/server/gameStore";
 
 /** Saves are a few KB; anything much bigger isn't one. */
 const MAX_BODY_BYTES = 64 * 1024;
@@ -16,7 +16,7 @@ const forApp =
   async (req, ctx) =>
     allowApp(req, await handler(req, ctx));
 
-export const OPTIONS = (req: Request) => preflight(req, "GET, PUT");
+export const OPTIONS = (req: Request) => preflight(req, "GET, PUT, DELETE");
 
 const reply = (body: object, status = 200) =>
   NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -65,6 +65,18 @@ export const PUT = forApp(async (req, { params }) => {
     const updatedAt = Date.now();
     await putGame(id, { name, save, updatedAt });
     return reply({ id, updatedAt });
+  } catch (e) {
+    return storeFailure(e);
+  }
+});
+
+/** Erase a game and the player's name with it (the player's right to delete their data). */
+export const DELETE = forApp(async (_req, { params }) => {
+  const id = normalizeGameId((await params).id);
+  if (!id) return reply({ error: "Invalid Game ID." }, 400);
+  try {
+    await deleteGame(id);
+    return reply({ id, deleted: true });
   } catch (e) {
     return storeFailure(e);
   }

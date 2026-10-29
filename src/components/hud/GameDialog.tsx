@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { IN_APP } from "@/game/session/api";
-import { useSession } from "@/game/session/session";
+import { deleteGame, useSession } from "@/game/session/session";
 import { useMessages } from "@/i18n/i18n";
+import { PrivacyLink } from "./PrivacyLink";
 
 const BUTTON =
   "shrink-0 rounded border border-amber-500/60 px-3 py-1.5 text-sm hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-amber-300";
@@ -17,6 +18,7 @@ export function GameDialog({ open, onClose }: { open: boolean; onClose: () => vo
   const sync = useSession((s) => s.sync);
   const t = useMessages();
   const [copied, setCopied] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<"idle" | "confirm" | "busy" | "failed">("idle");
 
   useEffect(() => {
     const d = ref.current;
@@ -39,7 +41,10 @@ export function GameDialog({ open, onClose }: { open: boolean; onClose: () => vo
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      onClose={() => {
+        setDeleteStep("idle");
+        onClose();
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -94,6 +99,49 @@ export function GameDialog({ open, onClose }: { open: boolean; onClose: () => vo
         <p role="status" className="text-xs text-amber-100/60">
           {t.gameDialog.sync[sync]}
         </p>
+
+        <footer className="flex flex-col items-center gap-3 border-t border-white/10 pt-3">
+          {deleteStep === "confirm" || deleteStep === "busy" ? (
+            <div className="flex flex-col items-center gap-2 text-center text-sm">
+              <p>{t.gameDialog.delete.confirm}</p>
+              <div className="flex gap-2">
+                <button
+                  className="rounded bg-red-700 px-3 py-1 hover:bg-red-600 focus-visible:outline-2 focus-visible:outline-amber-300 disabled:opacity-60"
+                  disabled={deleteStep === "busy"}
+                  onClick={async () => {
+                    setDeleteStep("busy");
+                    if (!(await deleteGame())) setDeleteStep("failed");
+                  }}
+                  data-testid="delete-game-confirm"
+                >
+                  {deleteStep === "busy" ? t.gameDialog.delete.deleting : t.gameDialog.delete.yes}
+                </button>
+                <button
+                  className="rounded px-3 py-1 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-amber-300"
+                  disabled={deleteStep === "busy"}
+                  onClick={() => setDeleteStep("idle")}
+                  autoFocus
+                >
+                  {t.menu.cancel}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="rounded text-xs text-red-300 underline underline-offset-2 hover:text-red-200 focus-visible:outline-2 focus-visible:outline-amber-300"
+              onClick={() => setDeleteStep("confirm")}
+              data-testid="delete-game"
+            >
+              {t.gameDialog.delete.button}
+            </button>
+          )}
+          {deleteStep === "failed" && (
+            <p role="alert" className="text-center text-xs text-red-300">
+              {t.gameDialog.delete.failed}
+            </p>
+          )}
+          <PrivacyLink />
+        </footer>
       </div>
     </dialog>
   );

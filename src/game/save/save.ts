@@ -15,10 +15,10 @@ export const BACKUP_KEY = "rbc-save-backup";
 let slotKey = SAVE_KEY;
 let backupKey = BACKUP_KEY;
 
-/** Points local saves at one game's own slot. */
-export function setSaveSlot(gameId: string) {
-  slotKey = `mt-save:${gameId}`;
-  backupKey = `mt-save-backup:${gameId}`;
+/** Points local saves at one game's own slot (null: back to the slot from before Game IDs). */
+export function setSaveSlot(gameId: string | null) {
+  slotKey = gameId ? `mt-save:${gameId}` : SAVE_KEY;
+  backupKey = gameId ? `mt-save-backup:${gameId}` : BACKUP_KEY;
 }
 
 interface SaveEnvelope {

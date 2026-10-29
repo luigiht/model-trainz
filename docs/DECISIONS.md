@@ -259,6 +259,12 @@ grant select, insert, update on public.games to service_role;
   the JSON `PUT`. It isn't a security boundary: the Game ID stays the only credential.
 - **No latest-build refresh in the app** (`IN_APP`): its build ships in the bundle and is updated
   through the stores. The Game panel drops the address-bar sentence (`explainerApp`).
+- **Privacy and deletion (Google Play User Data / Data safety).** `/privacy` is a page on the
+  website, translated like the rest of the UI; the Game panel and Settings link to it (in the app
+  it opens in the system browser via `apiUrl`). The Game panel's "Delete this game" sends
+  `DELETE /api/games/[id]`, then clears the profile and local saves (including the pre-Game-ID
+  slot, which a first visit would adopt) and reloads to the start screen. Like `PUT`, anyone with
+  the Game ID can delete the game: the ID stays the only credential.
 - **Safe areas.** `viewport-fit=cover`; the HUD (`safe-p-3`), the landscape shop drawer and the
   start screen pad with `env(safe-area-inset-*)`, which also helps the website on notched phones.
   System bars are hidden for a full-screen game; Android's default `insetsHandling: "css"` keeps

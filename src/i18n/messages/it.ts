@@ -88,6 +88,15 @@ export const it: Messages = {
       offline:
         "Al momento il server non è raggiungibile, quindi per ora i progressi vengono salvati su questo dispositivo.",
     },
+    delete: {
+      button: "Elimina questa partita",
+      confirm:
+        "Eliminare questa partita, il tuo nome e il suo ID partita dal server e da questo dispositivo? Non si può annullare.",
+      yes: "Sì, elimina",
+      deleting: "Eliminazione…",
+      failed:
+        "Il server non è raggiungibile, quindi non è stato eliminato nulla. Riprova più tardi.",
+    },
   },
   settings: {
     title: "Impostazioni",
@@ -183,5 +192,58 @@ export const it: Messages = {
     label: "Vista telecamera (V)",
     diorama: "Plastico",
     cab: "Cabina",
+  },
+  privacy: {
+    link: "Informativa sulla privacy",
+    title: "Informativa sulla privacy",
+    updated: "Ultimo aggiornamento: 29 ottobre 2026",
+    back: "Torna al gioco",
+    sections: [
+      {
+        heading: "Chi siamo",
+        body: [
+          "Model Trainz è un gioco creato da Luis Hermosilla. Questa informativa riguarda il sito (model-trainz.luigiht.com) e le app per iOS e Android.",
+        ],
+      },
+      {
+        heading: "Cosa salva il gioco",
+        body: [
+          "Il nome che scrivi all'inizio (va bene un soprannome), l'ID partita creato dal gioco e i tuoi progressi: binari posati, monete, potenziamenti e treni.",
+          "Le tue impostazioni (lingua, audio, grafica) restano sul tuo dispositivo.",
+          "Nient'altro: niente email, account, posizione, contatti o identificativi del dispositivo. Non ci sono pubblicità, statistiche né tracciamento.",
+        ],
+      },
+      {
+        heading: "Perché",
+        body: [
+          "Solo per salvare la partita online, così puoi continuarla su qualsiasi dispositivo con il tuo ID partita. Il tuo nome lo vedi solo tu e chi ha il tuo ID partita; non ci sono elenchi pubblici né classifiche.",
+        ],
+      },
+      {
+        heading: "Dove viene conservato",
+        body: [
+          "Sul tuo dispositivo e sul server del gioco (ospitato da Vercel, con il database su Supabase). Viaggia su una connessione cifrata (HTTPS). Non viene mai venduto né condiviso con nessun altro.",
+          "Come ogni sito, questi fornitori possono conservare per poco tempo registri tecnici (come gli indirizzi IP) per mantenere il servizio sicuro e funzionante.",
+        ],
+      },
+      {
+        heading: "Per quanto tempo, e come eliminarlo",
+        body: [
+          "Le partite online restano salvate finché non le elimini. Per eliminare la partita dal server e dal tuo dispositivo, apri Partita nel gioco e scegli \"Elimina questa partita\". Il tuo nome, l'ID partita e i progressi vengono cancellati per sempre.",
+        ],
+      },
+      {
+        heading: "Minori",
+        body: [
+          "Il gioco non chiede a nessuno il nome reale né dati di contatto, ed è adatto a tutte le età. I genitori possono eliminare la partita di un minore come descritto sopra, oppure scrivendoci.",
+        ],
+      },
+      {
+        heading: "Modifiche",
+        body: ["Se questa informativa cambia, la nuova versione verrà pubblicata qui con una nuova data."],
+      },
+    ],
+    contactHeading: "Contatti",
+    contact: "Domande, o non riesci ad aprire la partita per eliminarla? Scrivici con il tuo ID partita a",
   },
 };

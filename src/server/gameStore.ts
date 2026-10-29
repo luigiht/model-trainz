@@ -3,7 +3,7 @@
  * and SUPABASE_SECRET_KEY are set; otherwise one JSON file per game under `.data/games/` for local
  * development. On Vercel without Supabase, online saves are unavailable.
  */
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export interface StoredGame {
@@ -82,4 +82,17 @@ export async function putGame(id: string, game: StoredGame): Promise<void> {
   const tmp = `${file}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
   await writeFile(tmp, JSON.stringify(game));
   await rename(tmp, file);
+}
+
+/** Erase a game (no-op if there is none). */
+export async function deleteGame(id: string): Promise<void> {
+  assertSafeId(id);
+  if (supabaseConfig()) {
+    await supabase(`games?id=eq.${id}`, {
+      method: "DELETE",
+      headers: { Prefer: "return=minimal" },
+    });
+    return;
+  }
+  await rm(gameFile(id), { force: true });
 }

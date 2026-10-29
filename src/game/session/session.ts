@@ -3,7 +3,14 @@
  * game's save mirrored to the server so the ID or a `?game=ID` link continues it anywhere.
  */
 import { create } from "zustand";
-import { deserializeSave, readSave, serializeSave, setSaveSlot, writeSave } from "@/game/save/save";
+import {
+  clearSave,
+  deserializeSave,
+  readSave,
+  serializeSave,
+  setSaveSlot,
+  writeSave,
+} from "@/game/save/save";
 import { game, initGame, loadGame, onCheckpoint, setRunning } from "@/game/state/game";
 import { cleanPlayerName, generateGameId, normalizeGameId } from "@/lib/gameId";
 import { apiUrl } from "./api";
@@ -210,6 +217,10 @@ export async function submitProfile(
 
 let syncing = false;
 let checkpointTimer: number | undefined;
+/** The PUT in flight, so a deletion can wait for it rather than race it. */
+let pushing: Promise<unknown> = Promise.resolve();
+/** Set while this game is being deleted: nothing may push it to the server again. */
+let deleting = false;
 function startSync() {
   if (syncing) return;
   syncing = true;
@@ -231,7 +242,7 @@ function startSync() {
 /** Push this game to the server (keepalive lets it finish while the page closes). */
 async function syncNow(closing = false) {
   const { gameId, name } = useSession.getState();
-  if (!gameId) return;
+  if (!gameId || deleting) return;
   if (unverified) {
     if (closing) return;
     const remote = await fetchGame(gameId);
@@ -240,17 +251,54 @@ async function syncNow(closing = false) {
     const fromServer = remote ? deserializeSave(remote.save) : null;
     if (fromServer?.ok) loadGame(fromServer);
   }
+  if (deleting) return;
   if (!closing) useSession.setState({ sync: "saving" });
   try {
-    const res = await fetch(gameUrl(gameId), {
+    const req = fetch(gameUrl(gameId), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, save: serializeSave(game.state) }),
       keepalive: closing,
       signal: closing ? undefined : AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
+    pushing = req.catch(() => {});
+    const res = await req;
     useSession.setState(res.ok ? { sync: "saved", syncedAt: Date.now() } : { sync: "offline" });
   } catch {
     useSession.setState({ sync: "offline" });
   }
+}
+
+/**
+ * Game panel: erase this game from the server and this device (name, ID and progress), then
+ * reload to the start screen. Returns false, deleting nothing, if the server can't be reached.
+ */
+export async function deleteGame(): Promise<boolean> {
+  const { gameId } = useSession.getState();
+  deleting = true;
+  await pushing;
+  try {
+    const res = await fetch(gameUrl(gameId), {
+      method: "DELETE",
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch {
+    deleting = false;
+    return false;
+  }
+  setRunning(false);
+  clearSave();
+  // The pre-Game-ID slot too, or the next first visit would adopt it; the page writes a fresh game
+  // there as it unloads.
+  setSaveSlot(null);
+  loadGame(null);
+  clearSave();
+  try {
+    localStorage.removeItem(PROFILE_KEY);
+  } catch {
+    /* storage unavailable: nothing was remembered */
+  }
+  window.location.replace(window.location.pathname);
+  return true;
 }
