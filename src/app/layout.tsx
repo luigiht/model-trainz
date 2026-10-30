@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Silkscreen, Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const pixel = Silkscreen({ variable: "--font-pixel", weight: ["400", "700"], subsets: ["latin"] });
@@ -38,7 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${pixel.variable} ${sans.variable} ${mono.variable} ${body.variable} h-full`}
     >
-      <body className="h-full overflow-hidden antialiased">{children}</body>
+      <body className="h-full overflow-hidden antialiased">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
