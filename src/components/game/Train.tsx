@@ -103,6 +103,7 @@ export function Train() {
     // Wheels roll with distance travelled.
     const dist = game.view.distance;
     for (const v of [loco, ...cars]) for (const w of v.wheels) w.mesh.rotation.y = -dist / w.radius;
+    loco.animate?.(dist);
 
     // Chimney position for the steam system.
     if (loco.chimney) {

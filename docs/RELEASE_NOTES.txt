@@ -22,6 +22,8 @@ In this release:
   V cycles all four views.
 - New upgrade: Longer Platforms (+3 m of platform and +20% fares per level, up to 5).
 - Smooth train motion at any frame rate (no more jitter while moving).
+- Heritage Steam redesigned: a detailed side-tank engine with moving coupling and connecting
+  rods, and panelled compartment coaches with lining, doors, lamp tops and bogies.
 
 
 1.0 (build 1) - 29 October 2026

@@ -145,6 +145,7 @@ function CabRide({ reducedMotion, onReady }: { reducedMotion: boolean; onReady: 
       Math.sin(t * 7.3) * 0.004 * moving,
     );
     for (const w of loco.wheels) w.mesh.rotation.y = -sm.s / w.radius;
+    loco.animate?.(sm.s);
     cab.fireMaterial.emissiveIntensity = 2.2 + Math.sin(t * 13) * 0.4 + Math.sin(t * 29) * 0.3;
     cab.speedNeedle.rotation.x = -((sm.v / MAX_SPEED) * 4.2 - 2.1);
     cab.regulator.rotation.z = sm.v > 0 ? -0.7 : 0.15;
