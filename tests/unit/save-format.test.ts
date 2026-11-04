@@ -67,8 +67,14 @@ describe("formatting", () => {
     expect(formatDistance(1_500_000)).toBe("1.50K Km");
   });
 
-  it("names stations, cycling with numerals", () => {
+  it("names stations, then recombines the names without repeating", () => {
     expect(stationName(0)).toBe("Millbrook");
-    expect(stationName(20)).toBe("Millbrook II");
+    const seen = new Set<string>();
+    for (let i = 0; i < 2000; i++) {
+      const name = stationName(i);
+      expect(seen.has(name)).toBe(false);
+      seen.add(name);
+    }
+    expect(stationName(20)).not.toMatch(/ I+$/);
   });
 });

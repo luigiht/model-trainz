@@ -1,49 +1,56 @@
 "use client";
 
-import { useSettingsStore, type CameraMode } from "@/game/state/settingsStore";
-import { resetCabLook } from "@/components/game/trainFx";
+import { CAMERA_MODES, useSettingsStore, type CameraMode } from "@/game/state/settingsStore";
+import { resetCabLook, resetChase } from "@/components/game/trainFx";
 import { useMessages } from "@/i18n/i18n";
 
-const VIEWS: CameraMode[] = ["diorama", "cab"];
+function selectView(next: CameraMode) {
+  const s = useSettingsStore.getState();
+  if (next === s.cameraMode) return;
+  if (next === "cab") resetCabLook();
+  if (next === "chase") resetChase();
+  s.setCameraMode(next);
+}
 
-/** Segmented switch between the diorama and first-person cab cameras (also: V key). */
+/** Settings choice between the camera views (also: V key cycles them). */
 export function ViewToggle() {
   const mode = useSettingsStore((s) => s.cameraMode);
-  const setMode = useSettingsStore((s) => s.setCameraMode);
   const t = useMessages().view;
   return (
-    <div className="panel font-body flex items-center gap-1 p-1" role="group" aria-label={t.label}>
-      <svg
-        aria-hidden
-        viewBox="0 0 12 10"
-        shapeRendering="crispEdges"
-        className="mx-2 h-4 w-5 fill-amber-200"
+    <section aria-labelledby="settings-camera">
+      <h3 id="settings-camera" className="font-pixel mb-2 text-xs text-amber-200">
+        {t.label}
+      </h3>
+      <div
+        role="radiogroup"
+        aria-labelledby="settings-camera"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
       >
-        <path d="M3 0h3v1H3zM3 1h1v1H3zM5 1h1v1H5zM0 2h12v1H0zM0 9h12v1H0zM0 3h1v6H0zM11 3h1v6h-1zM5 4h2v1H5zM5 7h2v1H5zM4 5h1v2H4zM7 5h1v2H7zM9 4h1v1H9z" />
-      </svg>
-      {VIEWS.map((view) => (
-        <button
-          key={view}
-          aria-pressed={mode === view}
-          data-testid={`view-${view}`}
-          onClick={(e) => {
-            if (view === "cab" && mode !== "cab") resetCabLook();
-            setMode(view);
-            if (e.detail > 0) e.currentTarget.blur();
-          }}
-          className={`rounded px-3 py-1.5 text-sm transition focus-visible:outline-2 focus-visible:outline-amber-300 ${
-            mode === view ? "bg-amber-600 text-black" : "text-amber-50 hover:bg-white/10"
-          }`}
-        >
-          {t[view]}
-        </button>
-      ))}
-    </div>
+        {CAMERA_MODES.map((view) => {
+          const selected = mode === view;
+          return (
+            <button
+              key={view}
+              role="radio"
+              aria-checked={selected}
+              data-testid={`view-${view}`}
+              onClick={() => selectView(view)}
+              className={`rounded-md border px-2 py-2 text-left text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-amber-300 ${
+                selected
+                  ? "border-amber-400 bg-amber-700/50"
+                  : "border-white/10 bg-black/20 hover:bg-white/10"
+              }`}
+            >
+              {t[view]}
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
 export function toggleCameraMode() {
-  const s = useSettingsStore.getState();
-  if (s.cameraMode !== "cab") resetCabLook();
-  s.setCameraMode(s.cameraMode === "cab" ? "diorama" : "cab");
+  const current = useSettingsStore.getState().cameraMode;
+  selectView(CAMERA_MODES[(CAMERA_MODES.indexOf(current) + 1) % CAMERA_MODES.length]);
 }

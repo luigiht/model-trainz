@@ -119,10 +119,10 @@ export const es: Messages = {
       ["Mantener pulsado (ratón o dedo)", "Seguir colocando vía"],
       ["Espacio (mantén para repetir)", "Colocar vía"],
       ["Botón Colocar vía", "Colocar vía"],
-      ["V", "Cambiar vista Maqueta / Cabina"],
-      ["Rueda del ratón", "Zoom (vista Maqueta)"],
-      ["Arrastrar (vista Cabina)", "Mirar alrededor"],
-      ["Flechas / C (vista Cabina)", "Mirar alrededor / recentrar"],
+      ["V", "Siguiente vista de cámara"],
+      ["Rueda del ratón", "Zoom (vistas Maqueta y Seguimiento)"],
+      ["Arrastrar (vistas Cabina y Seguimiento)", "Mirar / girar alrededor del tren"],
+      ["Flechas / C (vistas Cabina y Seguimiento)", "Mirar alrededor / recentrar"],
       ["`  (acento grave)", "Mostrar u ocultar el panel de depuración"],
       ["Esc", "Cerrar este panel"],
     ],
@@ -166,6 +166,11 @@ export const es: Messages = {
       detail: "+1 vagón, +50% en tarifas",
       flavor: "Más asientos, más pasajeros.",
     },
+    platform: {
+      name: "Andenes largos",
+      detail: "+3 m de andén, +20% en tarifas",
+      flavor: "Cabe toda la cola. Cuidado con el hueco.",
+    },
     golden: {
       name: "Clavos de oro",
       detail: "+2% de probabilidad de que un clic pague 20×",
@@ -192,6 +197,8 @@ export const es: Messages = {
     label: "Vista de cámara (V)",
     diorama: "Maqueta",
     cab: "Cabina",
+    chase: "Seguimiento",
+    cinematic: "Cinemática",
   },
   privacy: {
     link: "Política de privacidad",
@@ -229,7 +236,7 @@ export const es: Messages = {
       {
         heading: "Cuánto tiempo, y cómo borrarlo",
         body: [
-          "Las partidas en línea se guardan hasta que las borras. Para borrar tu partida del servidor y de tu dispositivo, abre Partida en el juego y elige \"Borrar esta partida\". Así se eliminan para siempre tu nombre, tu ID de partida y tu progreso.",
+          'Las partidas en línea se guardan hasta que las borras. Para borrar tu partida del servidor y de tu dispositivo, abre Partida en el juego y elige "Borrar esta partida". Así se eliminan para siempre tu nombre, tu ID de partida y tu progreso.',
         ],
       },
       {
@@ -244,6 +251,7 @@ export const es: Messages = {
       },
     ],
     contactHeading: "Contacto",
-    contact: "¿Dudas, o no puedes abrir tu partida para borrarla? Escríbenos con tu ID de partida a",
+    contact:
+      "¿Dudas, o no puedes abrir tu partida para borrarla? Escríbenos con tu ID de partida a",
   },
 };

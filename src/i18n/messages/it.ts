@@ -119,10 +119,10 @@ export const it: Messages = {
       ["Tieni premuto (mouse o dito)", "Continua a posare binari"],
       ["Spazio (tieni premuto per ripetere)", "Posa binari"],
       ["Pulsante Posa binari", "Posa binari"],
-      ["V", "Cambia vista Plastico / Cabina"],
-      ["Rotellina del mouse", "Zoom (vista Plastico)"],
-      ["Trascina (vista Cabina)", "Guardati intorno"],
-      ["Frecce / C (vista Cabina)", "Guardati intorno / ricentra"],
+      ["V", "Vista telecamera successiva"],
+      ["Rotellina del mouse", "Zoom (viste Plastico e Inseguimento)"],
+      ["Trascina (viste Cabina e Inseguimento)", "Guardati / gira intorno al treno"],
+      ["Frecce / C (viste Cabina e Inseguimento)", "Guardati intorno / ricentra"],
       ["`  (accento grave)", "Mostra o nascondi il pannello di debug"],
       ["Esc", "Chiudi questo pannello"],
     ],
@@ -166,6 +166,11 @@ export const it: Messages = {
       detail: "+1 carrozza, +50% sulle tariffe",
       flavor: "Più posti, più biglietti.",
     },
+    platform: {
+      name: "Banchine lunghe",
+      detail: "+3 m di banchina, +20% sulle tariffe",
+      flavor: "C'è posto per tutta la fila. Attenzione al vuoto.",
+    },
     golden: {
       name: "Chiodi d'oro",
       detail: "+2% di probabilità che un clic paghi 20×",
@@ -192,6 +197,8 @@ export const it: Messages = {
     label: "Vista telecamera (V)",
     diorama: "Plastico",
     cab: "Cabina",
+    chase: "Inseguimento",
+    cinematic: "Cinematica",
   },
   privacy: {
     link: "Informativa sulla privacy",
@@ -229,7 +236,7 @@ export const it: Messages = {
       {
         heading: "Per quanto tempo, e come eliminarlo",
         body: [
-          "Le partite online restano salvate finché non le elimini. Per eliminare la partita dal server e dal tuo dispositivo, apri Partita nel gioco e scegli \"Elimina questa partita\". Il tuo nome, l'ID partita e i progressi vengono cancellati per sempre.",
+          'Le partite online restano salvate finché non le elimini. Per eliminare la partita dal server e dal tuo dispositivo, apri Partita nel gioco e scegli "Elimina questa partita". Il tuo nome, l\'ID partita e i progressi vengono cancellati per sempre.',
         ],
       },
       {
@@ -240,10 +247,13 @@ export const it: Messages = {
       },
       {
         heading: "Modifiche",
-        body: ["Se questa informativa cambia, la nuova versione verrà pubblicata qui con una nuova data."],
+        body: [
+          "Se questa informativa cambia, la nuova versione verrà pubblicata qui con una nuova data.",
+        ],
       },
     ],
     contactHeading: "Contatti",
-    contact: "Domande, o non riesci ad aprire la partita per eliminarla? Scrivici con il tuo ID partita a",
+    contact:
+      "Domande, o non riesci ad aprire la partita per eliminarla? Scrivici con il tuo ID partita a",
   },
 };

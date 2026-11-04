@@ -34,6 +34,11 @@ export const game = {
   route: new Route(createInitialState().seed),
   /** Recently laid piece ranges, for the drop-in animation: [firstIndex, lastIndexExclusive, time]. */
   recentLays: [] as { from: number; to: number; at: number }[],
+  /**
+   * What to draw: the train between the last two fixed simulation steps, so its motion is smooth at
+   * any frame rate. Render code reads these instead of `state.trainS` / `state.stats.distance`.
+   */
+  view: { trainS: 0, distance: 0 },
 };
 
 type Listener = (e: GameEvent) => void;
@@ -116,6 +121,21 @@ let accumulator = 0;
 let lastHud = 0;
 let lastSave = 0;
 let running = false;
+/** Train position at the previous fixed step, and the state it belonged to. */
+let prevS = 0;
+let prevDistance = 0;
+let prevOf: GameState | null = null;
+
+function updateView(alpha = Math.min(1, accumulator / SIM_DT)) {
+  const s = game.state;
+  if (prevOf !== s) {
+    prevOf = s;
+    prevS = s.trainS;
+    prevDistance = s.stats.distance;
+  }
+  game.view.trainS = prevS + (s.trainS - prevS) * alpha;
+  game.view.distance = prevDistance + (s.stats.distance - prevDistance) * alpha;
+}
 
 /** The simulation only advances while the player is in a game, not on the start screen. */
 export function setRunning(on: boolean) {
@@ -125,16 +145,23 @@ export function setRunning(on: boolean) {
 
 /** Called every rendered frame with the real elapsed time. */
 export function tickGame(dt: number) {
-  if (!running) return;
+  if (!running) {
+    updateView(1);
+    return;
+  }
   if (dt > CATCH_UP_THRESHOLD) {
     catchUp(dt);
     return;
   }
   accumulator += dt;
   while (accumulator >= SIM_DT) {
+    prevS = game.state.trainS;
+    prevDistance = game.state.stats.distance;
+    prevOf = game.state;
     stepSim(game.state, SIM_DT, events);
     accumulator -= SIM_DT;
   }
+  updateView();
   flush();
   const now = performance.now();
   if (now - lastHud > 100) {
@@ -149,6 +176,8 @@ export function tickGame(dt: number) {
 
 function catchUp(seconds: number) {
   simulateAway(game.state, Math.min(seconds, CATCH_UP_CAP_SECONDS));
+  prevOf = null;
+  updateView();
   useHud.setState(snapshot());
 }
 

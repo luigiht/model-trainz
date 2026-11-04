@@ -18,6 +18,7 @@ const BADGE: Record<string, string> = {
   boiler: "bg-red-600",
   fares: "bg-emerald-600",
   carriage: "bg-rose-800",
+  platform: "bg-stone-400",
   golden: "bg-yellow-400",
 };
 

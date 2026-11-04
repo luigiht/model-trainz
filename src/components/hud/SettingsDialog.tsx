@@ -8,10 +8,11 @@ import { sfx } from "@/audio/sfx";
 import { Credit } from "./Credit";
 import { LanguageSelect } from "./LanguageSelect";
 import { PrivacyLink } from "./PrivacyLink";
+import { ViewToggle } from "./ViewToggle";
 
 const QUALITY_OPTIONS: QualitySetting[] = ["auto", "low", "medium", "high", "ultra"];
 
-/** Settings panel: language, sound, graphics quality, controls reference. Native modal <dialog>. */
+/** Settings panel: language, sound, camera, graphics quality, controls. Native modal <dialog>. */
 export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const t = useMessages();
@@ -100,6 +101,8 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
             </label>
           </div>
         </section>
+
+        <ViewToggle />
 
         <section aria-labelledby="settings-quality">
           <h3 id="settings-quality" className="font-pixel mb-2 text-xs text-amber-200">

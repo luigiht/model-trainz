@@ -2,13 +2,17 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { MeshStandardMaterial, PlaneGeometry, type Mesh } from "three";
+import { Color, MeshStandardMaterial, PlaneGeometry, type Mesh } from "three";
 import { SEA_LEVEL, type RoutePoint } from "@/game/simulation/route";
+import { seasonMix, type SeasonMix } from "@/game/content/seasons";
 import { game } from "@/game/state/game";
 import { vivid } from "@/render/palette";
 
 const SIZE = 420;
 const focus: RoutePoint = { x: 0, y: 0, z: 0, dx: 1, dy: 0, dz: 0 };
+const mix: SeasonMix = { spring: 1, autumn: 0, winter: 0 };
+const OPEN_WATER = vivid(0x3f8fc0);
+const ICY_WATER = new Color(0x9cbccf);
 
 /**
  * One large faceted water plane that follows the train. Low-poly waves come from a vertex shader
@@ -20,7 +24,7 @@ export function Water() {
     const geo = new PlaneGeometry(SIZE, SIZE, 70, 70).rotateX(-Math.PI / 2).toNonIndexed();
     const uniforms = { uTime: { value: 0 } };
     const mat = new MeshStandardMaterial({
-      color: vivid(0x3f8fc0),
+      color: OPEN_WATER.clone(),
       flatShading: true,
       roughness: 0.15,
       metalness: 0.1,
@@ -55,8 +59,9 @@ transformed.y += sin(wp.x * 0.35 + uTime * 1.3) * 0.12 + cos(wp.z * 0.42 + uTime
     if (!m) return;
     // Snap to the grid spacing so the facets don't swim as the plane follows the train.
     const step = SIZE / 70;
-    const p = game.route.pointAt(game.state.trainS, focus);
+    const p = game.route.pointAt(game.view.trainS, focus);
     m.position.set(Math.round(p.x / step) * step, SEA_LEVEL - 0.2, Math.round(p.z / step) * step);
+    mat.color.lerpColors(OPEN_WATER, ICY_WATER, seasonMix(p.x, mix).winter);
   });
 
   return <mesh ref={ref} geometry={geo} material={mat} receiveShadow renderOrder={1} />;

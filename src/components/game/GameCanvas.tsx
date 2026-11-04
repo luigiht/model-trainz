@@ -8,21 +8,17 @@ import { resolveDpr, resolveEffects } from "@/render/effects/quality";
 import { useActiveQualityLevel, useSettingsStore } from "@/game/state/settingsStore";
 import { game } from "@/game/state/game";
 import { useMessages } from "@/i18n/i18n";
-import { vividCss } from "@/render/palette";
 import { CameraRig } from "./CameraRig";
 import { GameDriver } from "./GameDriver";
 import { PostEffects } from "./PostEffects";
 import { RenderProbe } from "./RenderProbe";
+import { SeasonSky } from "./SeasonSky";
 import { Stations } from "./Stations";
 import { Steam } from "./Steam";
 import { Terrain } from "./Terrain";
 import { Track } from "./Track";
 import { Train } from "./Train";
 import { Water } from "./Water";
-
-const SKY = vividCss(0xa9d8ee);
-const HEMI_SKY = vividCss(0xdcefff);
-const HEMI_GROUND = vividCss(0x6b5a3e);
 
 export default function GameCanvas({
   onReady,
@@ -59,9 +55,7 @@ export default function GameCanvas({
       aria-label={t.canvasLabel}
       role="img"
     >
-      <color attach="background" args={[SKY]} />
-      <fog attach="fog" args={[SKY, 120, 330]} />
-      <hemisphereLight args={[HEMI_SKY, HEMI_GROUND, 1.1]} />
+      <SeasonSky sun={sun} />
       <directionalLight
         ref={sun}
         intensity={2.7}

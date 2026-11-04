@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import {
   Matrix4,
@@ -13,10 +13,12 @@ import {
 import { game } from "@/game/state/game";
 import { railheadS } from "@/game/simulation/rules";
 import type { RoutePoint } from "@/game/simulation/route";
-import { useSettingsStore } from "@/game/state/settingsStore";
+import { useSettingsStore, type CameraMode } from "@/game/state/settingsStore";
 import { damp } from "@/lib/math";
 import { LOCO_LENGTH } from "@/render/train/trainModels";
-import { trainFx } from "./trainFx";
+import { TerrainField } from "@/render/world/terrain";
+import { ChaseRig, CinematicDirector, type CameraPose } from "./cameraShots";
+import { trainFx, zoomChase } from "./trainFx";
 
 const OFFSET = new Vector3(-16, 30, 38);
 const OFFSET_LENGTH = OFFSET.length();
@@ -38,18 +40,27 @@ const lookAt = new Vector3();
 const m = new Matrix4();
 const UP = new Vector3(0, 1, 0);
 const shadowFocus = new Vector3();
+const focus = new Vector3();
 const qLook = new Quaternion();
 const AXIS_X = new Vector3(1, 0, 0);
+const pose: CameraPose = { pos: new Vector3(), look: new Vector3(), fov: DIORAMA_FOV };
+const goalPos = new Vector3();
+const goalQuat = new Quaternion();
+const fromPos = new Vector3();
+const fromQuat = new Quaternion();
 
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 /**
- * Two cameras, one rig:
+ * One rig, four views:
  *  - Diorama: isometric-style narrow-FOV follow camera. Docked, it frames the platform and the
  *    stretch ahead where new pieces land; traveling, it follows the train. Wheel zooms.
+ *  - Chase: third-person orbit around the train (drag / arrows orbit, wheel zooms); see cameraShots.
  *  - Cab: first person from the driver's position, looking down the line, with gentle head bob.
  *    Drag (or arrow keys) to look around — see `trainFx.cabLook`, written by <GameRoot/>.
- * Switching blends position, orientation and FOV over ~1.2 s. The sun's shadow frustum follows.
+ *  - Cinematic: an automatic director cutting between film-style shots; see cameraShots.
+ * Switching blends from the old view to the new one over ~1.2 s; cinematic shots hard-cut. The
+ * sun's shadow frustum follows what the camera looks at.
  */
 export function CameraRig({
   sun,
@@ -62,15 +73,29 @@ export function CameraRig({
   const gl = useThree((s) => s.gl);
   const zoom = useRef(1.15);
   const initialised = useRef(false);
-  const progress = useRef(useSettingsStore.getState().cameraMode === "cab" ? 1 : 0);
   const look = useRef({ yaw: 0, pitch: 0 });
+  // Blend from the pose we left (`fromPos/fromQuat/fromFov`) into the current view's live pose.
+  const view = useRef<{ mode: CameraMode; prev: CameraMode; blend: number; fromFov: number }>({
+    mode: useSettingsStore.getState().cameraMode,
+    prev: useSettingsStore.getState().cameraMode,
+    blend: 1,
+    fromFov: DIORAMA_FOV,
+  });
+  const seed = game.state.seed;
+  // Main-thread terrain heights, so the free cameras stay above the ground and tunnel hills.
+  const field = useMemo(() => new TerrainField(seed), [seed]);
+  const chase = useMemo(() => new ChaseRig(), []);
+  const director = useMemo(() => new CinematicDirector(), []);
 
   useEffect(() => {
     const el = gl.domElement;
     const onWheel = (e: WheelEvent) => {
-      if (useSettingsStore.getState().cameraMode !== "diorama") return;
+      const mode = useSettingsStore.getState().cameraMode;
+      if (mode !== "diorama" && mode !== "chase") return;
       e.preventDefault();
-      zoom.current = Math.min(1.8, Math.max(0.45, zoom.current * (1 + Math.sign(e.deltaY) * 0.1)));
+      const factor = 1 + Math.sign(e.deltaY) * 0.1;
+      if (mode === "chase") zoomChase(factor);
+      else zoom.current = Math.min(1.8, Math.max(0.45, zoom.current * factor));
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => {
@@ -80,15 +105,25 @@ export function CameraRig({
 
   useFrame((_, dt) => {
     const s = game.state;
-    const wantCab = useSettingsStore.getState().cameraMode === "cab";
+    const { trainS, distance } = game.view;
+    const v = view.current;
+    const mode = useSettingsStore.getState().cameraMode;
+    if (mode !== v.mode) {
+      v.prev = v.mode;
+      v.mode = mode;
+      v.blend = 0;
+      v.fromFov = camera.fov;
+      fromPos.copy(camera.position);
+      fromQuat.copy(camera.quaternion);
+      if (mode === "chase") chase.reset();
+    }
 
     // --- Diorama pose -----------------------------------------------------------------------
-    const ahead =
-      s.phase === "docked" ? 4 + Math.min(railheadS(s.laid) - s.trainS, 20) * 0.25 : 6;
+    const ahead = s.phase === "docked" ? 4 + Math.min(railheadS(s.laid) - trainS, 20) * 0.25 : 6;
     // 0 on landscape screens, 1 on tall phone screens: those centre on the engine itself.
     const narrow = Math.min(1, Math.max(0, (1.2 - camera.aspect) / 0.7));
     const lookAhead = ahead + (1 - LOCO_LENGTH / 2 - ahead) * narrow;
-    game.route.pointAt(s.trainS + lookAhead, p);
+    game.route.pointAt(trainS + lookAhead, p);
     desired.set(p.x, p.y, p.z);
     if (!initialised.current) {
       target.copy(desired);
@@ -111,12 +146,12 @@ export function CameraRig({
       cabPos.copy(trainFx.cabEye);
       if (!reducedMotion) {
         const bob = Math.min(1, s.trainV / 5);
-        cabPos.y += Math.sin(s.stats.distance * 2.2) * 0.025 * bob + trainFx.jolt * 0.03;
-        cabPos.z += Math.sin(s.stats.distance * 1.1) * 0.015 * bob;
+        cabPos.y += Math.sin(distance * 2.2) * 0.025 * bob + trainFx.jolt * 0.03;
+        cabPos.z += Math.sin(distance * 1.1) * 0.015 * bob;
       }
       loco.localToWorld(cabPos);
       // Look down the line ahead of the train, then apply the (eased) drag look-around.
-      game.route.pointAt(s.trainS + 40, p);
+      game.route.pointAt(trainS + 40, p);
       lookAt.set(p.x, p.y - 1.5, p.z);
       m.lookAt(cabPos, lookAt, UP);
       cabQuat.setFromRotationMatrix(m);
@@ -132,17 +167,44 @@ export function CameraRig({
       cabQuat.copy(dioQuat);
     }
 
-    // --- Blend ------------------------------------------------------------------------------
-    const step = reducedMotion ? 1 : dt / TRANSITION_SECONDS;
-    progress.current = Math.min(1, Math.max(0, progress.current + (wantCab ? step : -step)));
-    const t = easeInOut(progress.current);
-    trainFx.cabBlend = t;
-    camera.position.lerpVectors(dioPos, cabPos, t);
+    // --- This view's live pose, and what the sun's shadows should centre on -------------------
+    let fov = DIORAMA_FOV;
+    let cut = false;
+    if (mode === "cab") {
+      goalPos.copy(cabPos);
+      goalQuat.copy(cabQuat);
+      fov = CAB_FOV;
+      // Centre shadows a little ahead of the driver.
+      game.route.pointAt(trainS + 18, p);
+      focus.set(p.x, p.y, p.z);
+    } else if (mode === "chase" || mode === "cinematic") {
+      if (mode === "chase") chase.update(dt, game.route, field, trainS, reducedMotion, pose);
+      else {
+        const shotState = { trainS, trainV: s.trainV, station: s.station };
+        director.update(dt, game.route, field, shotState, reducedMotion, pose);
+        cut = director.cut && v.blend >= 1;
+      }
+      goalPos.copy(pose.pos);
+      m.lookAt(pose.pos, pose.look, UP);
+      goalQuat.setFromRotationMatrix(m);
+      fov = pose.fov;
+      focus.copy(pose.look);
+    } else {
+      goalPos.copy(dioPos);
+      goalQuat.copy(dioQuat);
+      focus.copy(target);
+    }
+
+    // --- Blend from the previous view -------------------------------------------------------
+    v.blend = reducedMotion ? 1 : Math.min(1, v.blend + dt / TRANSITION_SECONDS);
+    const t = easeInOut(v.blend);
+    trainFx.cabBlend = mode === "cab" ? t : v.prev === "cab" ? 1 - t : 0;
+    camera.position.lerpVectors(fromPos, goalPos, t);
     // Arc upward mid-transition so the camera swoops instead of clipping through scenery.
     camera.position.y += Math.sin(Math.PI * t) * 6;
-    camera.quaternion.slerpQuaternions(dioQuat, cabQuat, t);
-    const fov = DIORAMA_FOV + (CAB_FOV - DIORAMA_FOV) * t;
-    const near = t > 0.6 ? 0.08 : 1;
+    camera.quaternion.slerpQuaternions(fromQuat, goalQuat, t);
+    fov = v.fromFov + (fov - v.fromFov) * t;
+    const near = trainFx.cabBlend > 0.6 ? 0.08 : mode === "diorama" ? 1 : 0.5;
     if (camera.fov !== fov || camera.near !== near) {
       camera.fov = fov;
       camera.near = near;
@@ -152,12 +214,8 @@ export function CameraRig({
     // --- Sun / shadow frustum follows what we're looking at ----------------------------------
     const light = sun.current;
     if (light) {
-      shadowFocus.lerpVectors(target, cabPos, t);
-      if (t > 0.5) {
-        // In the cab, centre shadows a little ahead of the driver.
-        game.route.pointAt(s.trainS + 18, p);
-        shadowFocus.set(p.x, p.y, p.z);
-      }
+      if (cut || shadowFocus.lengthSq() === 0) shadowFocus.copy(focus);
+      else shadowFocus.lerp(focus, damp(5, dt));
       light.position.copy(shadowFocus).add(SUN);
       light.target.position.copy(shadowFocus);
       (light.target as Object3D).updateMatrixWorld();

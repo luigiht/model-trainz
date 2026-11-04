@@ -38,7 +38,7 @@ export function Terrain({
 
   useFrame(() => {
     // Stream around a point a little ahead of the train, where the player is looking.
-    game.route.pointAt(game.state.trainS + 20, focus);
+    game.route.pointAt(game.view.trainS + 20, focus);
     manager.update(focus.x, focus.z);
     debugStats.chunks = manager.chunkCount;
     if (!notified.current && manager.hasInitialChunks) {

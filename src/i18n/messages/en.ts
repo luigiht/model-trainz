@@ -128,10 +128,10 @@ export const en = {
       ["Hold mouse / finger", "Keep laying track"],
       ["Space (hold to repeat)", "Lay track"],
       ["Lay track button", "Lay track"],
-      ["V", "Switch Diorama / Cab view"],
-      ["Mouse wheel", "Zoom (Diorama view)"],
-      ["Drag (Cab view)", "Look around"],
-      ["Arrow keys / C (Cab view)", "Look around / re-centre"],
+      ["V", "Next camera view"],
+      ["Mouse wheel", "Zoom (Diorama and Chase views)"],
+      ["Drag (Cab and Chase views)", "Look / orbit around the train"],
+      ["Arrow keys / C (Cab and Chase views)", "Look around / re-centre"],
       ["`  (backtick)", "Toggle the debug overlay"],
       ["Esc", "Close this panel"],
     ] satisfies [string, string][],
@@ -175,6 +175,11 @@ export const en = {
       detail: "+1 carriage, +50% fares",
       flavor: "More seats, more tickets.",
     },
+    platform: {
+      name: "Longer Platforms",
+      detail: "+3 m of platform, +20% fares",
+      flavor: "Room for the whole queue. Mind the gap.",
+    },
     golden: {
       name: "Golden Spikes",
       detail: "+2% chance a click pays 20×",
@@ -201,6 +206,8 @@ export const en = {
     label: "Camera view (V)",
     diorama: "Diorama",
     cab: "Cab",
+    chase: "Chase",
+    cinematic: "Cinematic",
   } satisfies Record<CameraMode | "label", string>,
   privacy: {
     link: "Privacy Policy",
@@ -238,7 +245,7 @@ export const en = {
       {
         heading: "How long, and deleting it",
         body: [
-          "Online saves are kept until you delete them. To delete your game from the server and your device, open Game in the game and choose \"Delete this game\". This removes your name, Game ID and progress for good.",
+          'Online saves are kept until you delete them. To delete your game from the server and your device, open Game in the game and choose "Delete this game". This removes your name, Game ID and progress for good.',
         ],
       },
       {

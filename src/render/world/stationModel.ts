@@ -5,17 +5,23 @@
  */
 import {
   BoxGeometry,
+  BufferGeometry,
   CylinderGeometry,
+  DoubleSide,
   ExtrudeGeometry,
+  Float32BufferAttribute,
   Group,
   Mesh,
   Shape,
-  type BufferGeometry,
+  Vector3,
   type Material,
 } from "three";
 import { COLORS, flatMaterial } from "@/render/lowpoly";
+import { PLATFORM_MAX_LEVEL, PLATFORM_SECTION } from "@/game/content/upgrades";
 
 export const PLATFORM_LENGTH = 14;
+/** The longest a platform can grow (Longer Platforms maxed); world gen keeps this clear. */
+export const MAX_PLATFORM_LENGTH = PLATFORM_LENGTH + PLATFORM_SECTION * PLATFORM_MAX_LEVEL;
 
 export interface StationModel {
   group: Group;
@@ -140,5 +146,96 @@ export function buildStation(variant: number): StationModel {
       i,
     );
 
+  return { group, dispose: () => owned.forEach((o) => o.dispose()) };
+}
+
+/** Maps (distance back from the platform's rear end, side offset, height) to a world point. */
+export type PlatformFrame = (u: number, d: number, h: number, out: Vector3) => Vector3;
+
+// Cross-sections in the station frame (side offset d, height h), matching the platform boxes.
+const SLAB_PROFILE: [number, number][] = [
+  [-1.45, -0.275],
+  [-1.45, 0.475],
+  [-4.65, 0.475],
+  [-4.65, -0.275],
+];
+const STRIPE_PROFILE: [number, number][] = [
+  [-1.45, 0.475],
+  [-1.45, 0.53],
+  [-1.75, 0.53],
+  [-1.75, 0.475],
+];
+const SWEEP_STEP = 0.75;
+
+/** Sweep a closed cross-section along the frame for u in [0, length], capping the far end. */
+function sweep(profile: [number, number][], length: number, frame: PlatformFrame) {
+  const n = Math.max(1, Math.ceil(length / SWEEP_STEP));
+  const rings: Vector3[][] = [];
+  // Start a hair inside the station's box so there is never a sliver of gap at the joint.
+  for (let i = 0; i <= n; i++) {
+    const u = -0.02 + ((length + 0.02) * i) / n;
+    rings.push(profile.map(([d, h]) => frame(u, d, h, new Vector3())));
+  }
+  const pos: number[] = [];
+  const tri = (...pts: Vector3[]) => pts.forEach((p) => pos.push(p.x, p.y, p.z));
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < profile.length - 1; j++) {
+      const [a, b, c, d] = [rings[i][j], rings[i][j + 1], rings[i + 1][j + 1], rings[i + 1][j]];
+      tri(a, b, c);
+      tri(a, c, d);
+    }
+  const end = rings[n];
+  for (let j = 1; j < end.length - 1; j++) tri(end[0], end[j], end[j + 1]);
+  const g = new BufferGeometry();
+  g.setAttribute("position", new Float32BufferAttribute(pos, 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+/**
+ * Longer Platforms: one continuous slab (and edge stripe) swept `length` back from the platform's
+ * rear end along `frame`, so it bends with the line without seams. Lamps every 6 m, some benches.
+ */
+export function buildPlatformExtension(length: number, frame: PlatformFrame): StationModel {
+  const group = new Group();
+  const stone = flatMaterial(COLORS.stone, { roughness: 1 });
+  const stripe = flatMaterial(0xf3d36b);
+  stone.side = DoubleSide;
+  stripe.side = DoubleSide;
+  const dark = flatMaterial(COLORS.locoBlack, { roughness: 0.5, metalness: 0.3 });
+  const lamp = flatMaterial(COLORS.lamp, { emissive: COLORS.lamp, emissiveIntensity: 3 });
+  const wood = flatMaterial(COLORS.wood);
+  const slab = sweep(SLAB_PROFILE, length, frame);
+  const edge = sweep(STRIPE_PROFILE, length, frame);
+  const post = new CylinderGeometry(0.07, 0.1, 2.6, 6);
+  const head = new BoxGeometry(0.35, 0.4, 0.35);
+  const seat = new BoxGeometry(1.6, 0.12, 0.5);
+  const back = new BoxGeometry(1.6, 0.5, 0.08);
+  const a = new Vector3();
+  const b = new Vector3();
+  const add = (geo: BufferGeometry, m: Material, u = 0, d = 0, h = 0) => {
+    const part = new Mesh(geo, m);
+    if (geo !== slab && geo !== edge) {
+      // Props stand level, turned to the line's direction at u.
+      frame(u, d, h, part.position);
+      frame(u - 0.5, d, h, a);
+      frame(u + 0.5, d, h, b);
+      part.rotation.y = Math.atan2(a.z - b.z, b.x - a.x);
+    }
+    part.castShadow = true;
+    part.receiveShadow = true;
+    group.add(part);
+  };
+  add(slab, stone);
+  add(edge, stripe);
+  for (let u = 4.5; u < length - 0.5; u += 6) {
+    add(post, dark, u, -2.0, 1.8);
+    add(head, lamp, u, -2.0, 3.25);
+  }
+  for (let u = 7.5; u < length - 1; u += 12) {
+    add(seat, wood, u, -3.9, 0.95);
+    add(back, wood, u, -4.15, 1.2);
+  }
+  const owned = [stone, stripe, dark, lamp, wood, slab, edge, post, head, seat, back];
   return { group, dispose: () => owned.forEach((o) => o.dispose()) };
 }

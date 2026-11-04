@@ -156,5 +156,8 @@ describe("economy", () => {
     l.carriage = 2;
     l.fares = 4;
     expect(deriveStats(l, "heritage").fareMultiplier).toBeCloseTo(2 * 2);
+    l.platform = 5;
+    expect(deriveStats(l, "heritage")).toMatchObject({ platformSections: 5 });
+    expect(deriveStats(l, "heritage").fareMultiplier).toBeCloseTo(2 * 2 * 2);
   });
 });

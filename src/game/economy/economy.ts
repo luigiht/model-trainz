@@ -32,6 +32,8 @@ export interface DerivedStats {
   maxSpeed: number;
   fareMultiplier: number;
   carriages: number;
+  /** Extra platform sections at every station (Longer Platforms). */
+  platformSections: number;
   goldenChance: number;
 }
 
@@ -45,8 +47,10 @@ export function deriveStats(l: UpgradeLevels, trainSet: TrainSetId): DerivedStat
     autoLayPerSec: 0.5 * l.gang,
     coinsPerPiece: 1 + l.steel,
     maxSpeed: BASE_SPEED * (1 + 0.2 * l.boiler) * set.speed,
-    fareMultiplier: (1 + 0.25 * l.fares) * (1 + 0.5 * l.carriage) * set.fares,
+    fareMultiplier:
+      (1 + 0.25 * l.fares) * (1 + 0.5 * l.carriage) * (1 + 0.2 * l.platform) * set.fares,
     carriages: 1 + l.carriage,
+    platformSections: l.platform,
     goldenChance: 0.02 * l.golden,
   };
 }

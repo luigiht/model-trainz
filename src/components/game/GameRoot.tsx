@@ -8,14 +8,14 @@ import { SettingsMenu } from "@/components/hud/SettingsMenu";
 import { StatusPanel } from "@/components/hud/StatusPanel";
 import { Toasts, toast } from "@/components/hud/Toasts";
 import { UpgradeShop } from "@/components/hud/UpgradeShop";
-import { ViewToggle, toggleCameraMode } from "@/components/hud/ViewToggle";
+import { toggleCameraMode } from "@/components/hud/ViewToggle";
 import { setFloaterLayer, spawnFloater } from "@/components/hud/floaters";
 import { onGameEvent, playerLayTrack, useHud } from "@/game/state/game";
 import { bootSession, useSession } from "@/game/session/session";
 import { stationName } from "@/game/content/stations";
 import { formatCoins } from "@/lib/format";
 import { sfx } from "@/audio/sfx";
-import { nudgeCabLook, resetCabLook, trainFx } from "./trainFx";
+import { nudgeCabLook, nudgeChase, resetCabLook, resetChase, trainFx } from "./trainFx";
 import { useSettingsStore } from "@/game/state/settingsStore";
 import { currentMessages, useLocale, useMessages } from "@/i18n/i18n";
 
@@ -29,7 +29,21 @@ const DRAG_THRESHOLD_PX = 6;
 const DRAG_SENSITIVITY = 0.0055;
 const KEY_LOOK_STEP = 0.15;
 
-const isCab = () => useSettingsStore.getState().cameraMode === "cab";
+/** Views where dragging / arrow keys move the camera (instead of every press laying track). */
+const isFreeLook = () => {
+  const mode = useSettingsStore.getState().cameraMode;
+  return mode === "cab" || mode === "chase";
+};
+
+function nudgeView(dx: number, dy: number) {
+  if (useSettingsStore.getState().cameraMode === "chase") nudgeChase(dx, dy);
+  else nudgeCabLook(dx, dy);
+}
+
+function recentreView() {
+  if (useSettingsStore.getState().cameraMode === "chase") resetChase();
+  else resetCabLook();
+}
 
 interface Gesture {
   id: number;
@@ -37,7 +51,7 @@ interface Gesture {
   startY: number;
   lastX: number;
   lastY: number;
-  /** pending: undecided tap/hold vs drag (cab only); drag: rotating; laying: tap/hold lays track. */
+  /** pending: undecided tap/hold vs drag (cab/chase); drag: moving the camera; laying: lays track. */
   phase: "pending" | "drag" | "laying";
 }
 
@@ -147,11 +161,11 @@ export function GameRoot() {
         return;
       }
       if (lookKey) {
-        // Arrow keys look around / C re-centres — cab view only.
-        if (!isCab()) return;
+        // Arrow keys look / orbit, C re-centres — cab and chase views only.
+        if (!isFreeLook()) return;
         e.preventDefault();
-        if (e.code === "KeyC") resetCabLook();
-        else nudgeCabLook(...LOOK_KEYS[e.code]);
+        if (e.code === "KeyC") recentreView();
+        else nudgeView(...LOOK_KEYS[e.code]);
         return;
       }
       // Space on a focused button should press that button, not lay track.
@@ -198,7 +212,7 @@ export function GameRoot() {
       data-ready={ready}
     >
       <div
-        className={`absolute inset-0 touch-none ${cameraMode === "cab" ? "cursor-grab" : "cursor-pointer"}`}
+        className={`absolute inset-0 touch-none ${cameraMode === "cab" || cameraMode === "chase" ? "cursor-grab" : "cursor-pointer"}`}
         data-testid="scene"
         onPointerDown={(e) => {
           if (e.button !== 0 || gesture.current) return;
@@ -209,7 +223,7 @@ export function GameRoot() {
             startY: e.clientY,
             lastX: e.clientX,
             lastY: e.clientY,
-            phase: isCab() ? "pending" : "laying",
+            phase: isFreeLook() ? "pending" : "laying",
           };
           gesture.current = g;
           e.currentTarget.setPointerCapture(e.pointerId);
@@ -218,7 +232,7 @@ export function GameRoot() {
             layAt(e.clientX, e.clientY);
             startHold(() => pointer.current);
           } else {
-            // Cab: wait to see if this is a drag. Holding still lays track continuously.
+            // Cab / chase: wait to see if this is a drag. Holding still lays track continuously.
             stopHold();
             hold.current.delay = window.setTimeout(() => {
               if (gesture.current !== g || g.phase !== "pending") return;
@@ -245,7 +259,7 @@ export function GameRoot() {
           }
           if (g.phase === "drag") {
             // "Grab the world": drag right turns the view left, drag down tilts it up.
-            nudgeCabLook(
+            nudgeView(
               (e.clientX - g.lastX) * DRAG_SENSITIVITY,
               (e.clientY - g.lastY) * DRAG_SENSITIVITY,
             );
@@ -306,9 +320,6 @@ export function GameRoot() {
             {t.hud.layTrack}{" "}
             <span className="opacity-70 pointer-coarse:hidden">{t.hud.layTrackKey}</span>
           </button>
-          <div className="pointer-events-auto sm:absolute sm:bottom-1 sm:left-0">
-            <ViewToggle />
-          </div>
         </div>
       </div>
 

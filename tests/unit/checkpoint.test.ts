@@ -45,3 +45,28 @@ describe("checkpoints (pushed to the server right away)", () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("rendered train position", () => {
+  afterEach(() => setRunning(false));
+
+  it("advances smoothly every frame between fixed simulation steps", () => {
+    loadGame(null);
+    const s = game.state;
+    while (railheadS(s.laid) < stationS(1)) s.laid++;
+    s.phase = "traveling";
+    s.trainV = 6;
+    setRunning(true);
+    tickGame(0.5);
+    // 144 Hz frames against the 30 Hz simulation: the drawn train never stalls or jumps back.
+    let last = game.view.trainS;
+    const deltas: number[] = [];
+    for (let i = 0; i < 60; i++) {
+      tickGame(1 / 144);
+      deltas.push(game.view.trainS - last);
+      last = game.view.trainS;
+    }
+    expect(Math.min(...deltas)).toBeGreaterThan(0);
+    expect(Math.max(...deltas) / Math.min(...deltas)).toBeLessThan(1.6);
+    expect(game.view.trainS).toBeLessThanOrEqual(s.trainS);
+  });
+});

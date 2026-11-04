@@ -253,8 +253,10 @@ test("debug overlay toggles; settings panel changes quality + volume and they pe
 
 test("cab view: toggle, drag to look (no track), tap to lay, V key, persists", async ({ page }) => {
   await ready(page);
+  await page.getByTestId("settings").click();
   await page.getByTestId("view-cab").click();
-  await expect(page.getByTestId("view-cab")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("view-cab")).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Escape");
   await page.waitForTimeout(2500); // camera transition
   await page.screenshot({ path: "test-results/screenshots/cab-docked.png" });
 
@@ -280,7 +282,10 @@ test("cab view: toggle, drag to look (no track), tap to lay, V key, persists", a
   await page.waitForTimeout(2500);
   await page.screenshot({ path: "test-results/screenshots/cab-moving.png" });
   await resume(page);
-  await expect(page.getByTestId("view-cab")).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("settings").click();
+  await expect(page.getByTestId("view-cab")).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Escape");
   await page.keyboard.press("v");
-  await expect(page.getByTestId("view-diorama")).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("settings").click();
+  await expect(page.getByTestId("view-cinematic")).toHaveAttribute("aria-checked", "true");
 });

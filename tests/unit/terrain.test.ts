@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { TerrainField, buildTerrainChunk, CHUNK_SIZE } from "@/render/world/terrain";
+import { TUNNEL_FROM_STATION } from "@/render/world/tunnels";
+import { MAX_PLATFORM_LENGTH } from "@/render/world/stationModel";
+import { stationS } from "@/game/simulation/rules";
+import { SEASON_LENGTH, seasonAt, seasonMix } from "@/game/content/seasons";
 
 describe("low-poly terrain", () => {
   const field = new TerrainField(7);
@@ -37,5 +41,37 @@ describe("low-poly terrain", () => {
     expect(a.colors.length).toBe(a.positions.length);
     // The heightmap part (first 16×16×2 triangles) faces up.
     for (let t = 0; t < 512; t++) expect(a.normals[t * 9 + 1]).toBeGreaterThan(0);
+  });
+
+  it("places tunnels between platforms, under a hill", () => {
+    const tunnels = field.tunnels.between(0, 4000);
+    expect(tunnels.length).toBeGreaterThan(3);
+    const first = field.route.xAt(stationS(TUNNEL_FROM_STATION));
+    for (const t of tunnels) {
+      expect(t.start).toBeGreaterThanOrEqual(first);
+      expect(t.start < t.x0 && t.x0 < t.x1 && t.x1 < t.end).toBe(true);
+      for (let k = 0; k < 60; k++) {
+        const platformEnd = field.route.xAt(stationS(k));
+        const platformStart = field.route.xAt(stationS(k) - MAX_PLATFORM_LENGTH);
+        expect(platformEnd < t.start || platformStart > t.end).toBe(true);
+      }
+      const mid = (t.x0 + t.x1) / 2;
+      const z = field.route.z(mid);
+      expect(field.landHeight(mid, z + 7)).toBeGreaterThan(field.route.y(mid) + 6);
+      expect(field.inTunnel(mid, z)).toBe(true);
+    }
+  });
+});
+
+describe("seasons", () => {
+  it("starts in spring and cycles through autumn and winter", () => {
+    expect(seasonAt(0, 0.99)).toBe("spring");
+    expect(seasonAt(SEASON_LENGTH * 1.3, 0.5)).toBe("autumn");
+    expect(seasonAt(SEASON_LENGTH * 2.3, 0.5)).toBe("winter");
+    expect(seasonAt(SEASON_LENGTH * 3.3, 0.5)).toBe("spring");
+    for (let x = 0; x < SEASON_LENGTH * 4; x += 37) {
+      const m = seasonMix(x);
+      expect(m.spring + m.autumn + m.winter).toBeCloseTo(1, 6);
+    }
   });
 });

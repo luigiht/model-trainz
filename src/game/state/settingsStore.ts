@@ -3,7 +3,9 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { AUTO_START_LEVEL, type QualityLevel, type QualitySetting } from "@/render/effects/quality";
 import type { Locale } from "@/i18n/locales";
 
-export type CameraMode = "diorama" | "cab";
+export type CameraMode = "diorama" | "chase" | "cab" | "cinematic";
+/** Settings order, and the order V cycles through. */
+export const CAMERA_MODES: readonly CameraMode[] = ["diorama", "chase", "cab", "cinematic"];
 
 export interface SettingsState {
   quality: QualitySetting;

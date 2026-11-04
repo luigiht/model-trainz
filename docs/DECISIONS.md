@@ -107,6 +107,18 @@ Newest at the bottom. Each entry: decision — why.
   tap (lays one piece), holding still for 320 ms = continuous laying, moving past 6 px = camera drag
   (lays nothing). Diorama view keeps lay-on-press. Look is "grab the world", clamped to ±109° yaw,
   -40°/+29° pitch, eased. Keyboard equivalents: arrow keys look, C re-centres, V switches view.
+- **Camera view lives in Settings** (radio group), not on the main HUD; V cycles the views.
+- **Chase view** follows the "free look" third-person pattern (e.g. Cinemachine FreeLook): an
+  orbit (yaw/pitch/distance) around the loco, framed from behind by default, lagging slightly on
+  position and heading. Drag/arrows orbit (the cab's tap-vs-drag rule applies), wheel zooms, C
+  resets; after 3 s idle it eases back behind the train (not with reduced motion). It is kept above
+  the ground and tunnel hills using a main-thread `TerrainField`.
+- **Cinematic view** is an automatic director in the "film idioms / clear shot" style: it cuts
+  every ~7 s (11 s with reduced motion, which also freezes orbits and drifts) between a lineside
+  shot that pans as the train passes, a helicopter orbit, a parallel tracking dolly, a low head-on
+  shot and a high establishing shot. Shots inside a tunnel hill are skipped, and side shots stay on
+  the open side of the line near stations. Switching views blends from the current camera pose;
+  shot changes are hard cuts.
 
 ## Loading screen
 
@@ -284,3 +296,18 @@ grant select, insert, update on public.games to service_role;
 - **Not yet:** signing and store listings. iOS may clear the web view's `localStorage` under
   storage pressure; online saves cover it, but `@capacitor/preferences` would keep the profile
   safer.
+
+## Endless line: station names, seasons, tunnels
+
+- **Station names** never cycle: after the 20 hand-written names, stems and endings of those names
+  are recombined (shuffled with a fixed seed), then prefixed (Upper, Little, …), then numbered.
+- **Seasons follow distance**, not time: spring → autumn → winter → spring, each ~900 world units
+  (`src/game/content/seasons.ts`). Terrain faces and props dither between seasons across the blend
+  band; sky, fog, lights and water blend with the mix around the train.
+- **Tunnels** from station 10 on, on about half the legs, placed between platforms. The heightfield
+  keeps its cutting; an extra "cover" of terrain triangles on the same grid restores the hill over
+  it (so the top is seamless), a stone-lined arched tube with ribs runs underneath, and extruded
+  stone portals sit on grid lines with the hill capped to meet their tops.
+- **Longer Platforms** (upgrade, max 5): each level adds a 3 m platform section behind every
+  platform (+20% fares). Sections are placed one by one along the route so they follow curves.
+  Tunnels are planned against the maxed length, so they never depend on a player's upgrades.

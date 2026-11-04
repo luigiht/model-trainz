@@ -55,8 +55,14 @@ export function Train() {
     trainFx.jolt *= Math.exp(-dt * 10);
 
     const locoLength = loco.length ?? LOCO_LENGTH;
-    placeOnRoute(game.route, loco.group, state.trainS - locoLength / 2, loco.halfBase ?? 1.6, sway);
-    let s = state.trainS - locoLength - COUPLING_GAP;
+    placeOnRoute(
+      game.route,
+      loco.group,
+      game.view.trainS - locoLength / 2,
+      loco.halfBase ?? 1.6,
+      sway,
+    );
+    let s = game.view.trainS - locoLength - COUPLING_GAP;
     cars.forEach((car, i) => {
       const length = car.length ?? CARRIAGE_LENGTH;
       placeOnRoute(
@@ -95,7 +101,7 @@ export function Train() {
     lastSpeed = speed;
 
     // Wheels roll with distance travelled.
-    const dist = state.stats.distance;
+    const dist = game.view.distance;
     for (const v of [loco, ...cars]) for (const w of v.wheels) w.mesh.rotation.y = -dist / w.radius;
 
     // Chimney position for the steam system.
