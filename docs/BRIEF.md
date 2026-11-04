@@ -160,7 +160,7 @@ text, punny station names, whimsical achievements.
 
 ## §15 Constraints / §16 Done
 
-No multiplayer/accounts/backend/ads/analytics/paid services. Initial JS < 3 MB gz. Don't over-engineer
+No multiplayer/accounts/backend/ads/paid services. Initial JS < 3 MB gz. Don't over-engineer
 the voxel engine. Done = install/dev/build/start work; playable click → earn → upgrade → unlock →
 prestige in both cameras; quality tiers + auto; saves persist/migrate; offline progress; tests/lint/
 typecheck pass; docs current; `docs/KNOWN_ISSUES.md`.

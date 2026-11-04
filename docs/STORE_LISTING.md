@@ -48,7 +48,7 @@ Your game saves online with a simple Game ID. Enter it on any device, phone, tab
 **A COZY GAME, NO STRINGS ATTACHED**
 • No ads
 • No in-app purchases: everything is earned by playing
-• No accounts, no tracking
+• No accounts
 • Adjustable graphics quality for older devices
 • Available in English, Spanish and Italian
 

@@ -212,7 +212,7 @@ export const en = {
   privacy: {
     link: "Privacy Policy",
     title: "Privacy Policy",
-    updated: "Last updated: 29 October 2026",
+    updated: "Last updated: 4 November 2026",
     back: "Back to the game",
     sections: [
       {
@@ -226,7 +226,8 @@ export const en = {
         body: [
           "The name you type when you start (a nickname is fine), the Game ID the game creates, and your progress: track laid, coins, upgrades and trains.",
           "Your settings (language, sound, graphics) stay on your device.",
-          "Nothing else: no email, accounts, location, contacts or device identifiers. There are no ads, no analytics and no tracking.",
+          "Nothing else: no email, accounts, location, contacts or device identifiers. There are no ads.",
+          "To see how many people play, the website counts visits with Vercel Web Analytics: pages viewed, country, and browser and device type, in aggregate. It uses no cookies and doesn't identify you.",
         ],
       },
       {

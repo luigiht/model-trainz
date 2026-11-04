@@ -203,7 +203,7 @@ export const it: Messages = {
   privacy: {
     link: "Informativa sulla privacy",
     title: "Informativa sulla privacy",
-    updated: "Ultimo aggiornamento: 29 ottobre 2026",
+    updated: "Ultimo aggiornamento: 4 novembre 2026",
     back: "Torna al gioco",
     sections: [
       {
@@ -217,7 +217,8 @@ export const it: Messages = {
         body: [
           "Il nome che scrivi all'inizio (va bene un soprannome), l'ID partita creato dal gioco e i tuoi progressi: binari posati, monete, potenziamenti e treni.",
           "Le tue impostazioni (lingua, audio, grafica) restano sul tuo dispositivo.",
-          "Nient'altro: niente email, account, posizione, contatti o identificativi del dispositivo. Non ci sono pubblicità, statistiche né tracciamento.",
+          "Nient'altro: niente email, account, posizione, contatti o identificativi del dispositivo. Non ci sono pubblicità.",
+          "Per sapere quante persone giocano, il sito conta le visite con Vercel Web Analytics: pagine viste, paese e tipo di browser e dispositivo, in forma aggregata. Non usa cookie e non ti identifica.",
         ],
       },
       {

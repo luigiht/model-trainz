@@ -203,7 +203,7 @@ export const es: Messages = {
   privacy: {
     link: "Política de privacidad",
     title: "Política de privacidad",
-    updated: "Última actualización: 29 de octubre de 2026",
+    updated: "Última actualización: 4 de noviembre de 2026",
     back: "Volver al juego",
     sections: [
       {
@@ -217,7 +217,8 @@ export const es: Messages = {
         body: [
           "El nombre que escribes al empezar (vale un apodo), el ID de partida que crea el juego y tu progreso: vía colocada, monedas, mejoras y trenes.",
           "Tus ajustes (idioma, sonido, gráficos) se quedan en tu dispositivo.",
-          "Nada más: ni correo, ni cuentas, ni ubicación, ni contactos, ni identificadores del dispositivo. No hay anuncios, ni analíticas, ni seguimiento.",
+          "Nada más: ni correo, ni cuentas, ni ubicación, ni contactos, ni identificadores del dispositivo. No hay anuncios.",
+          "Para saber cuánta gente juega, la web cuenta las visitas con Vercel Web Analytics: páginas vistas, país y tipo de navegador y dispositivo, en conjunto. No usa cookies ni te identifica.",
         ],
       },
       {

@@ -22,7 +22,7 @@ The full design brief lives in `docs/BRIEF.md`; the milestone plan in `docs/PLAN
 3. No per-frame React state updates; use refs/`useFrame`/imperative store reads; throttle HUD updates.
 4. All 3D resources are disposed on unmount/unload; no memory leaks; reuse temp objects in hot paths.
 5. No external copyrighted assets; procedural textures/models/audio. Document any CC0 asset in `CREDITS.md`.
-6. No real-money mechanics, no dark patterns, no tracking/analytics.
+6. No real-money mechanics, no dark patterns.
 7. Before finishing any task: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` must pass.
 8. Visual changes must be verified by running the dev server and (when possible) taking a Playwright screenshot.
 9. Keep quality tiers working: every effect must be individually disable-able and must degrade gracefully.
